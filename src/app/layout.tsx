@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   title: 'Cuisine Cloud - Your Smart Recipe Platform',
   description:
     'Discover, create, and share amazing recipes with the help of AI.',
+  manifest: '/manifest.json',
+  themeColor: '#fde68a',
 };
 
 export default function RootLayout({
