@@ -2,10 +2,10 @@
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  minInstances: 1
+  minInstances: 2
   maxInstances: 10
   cpu: 1
-  memoryMiB: 1024
+  memoryMiB: 2048
 secretEnvironmentVariables:
   - key: NEXT_PUBLIC_FIREBASE_API_KEY
     secret: FIREBASE_API_KEY
