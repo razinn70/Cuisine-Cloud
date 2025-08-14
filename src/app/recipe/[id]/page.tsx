@@ -111,7 +111,7 @@ export default function RecipePage() {
           </header>
 
           {/* Image and Meta */}
-          <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-6 shadow-lg">
+          <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-6 shadow-lg">
             <Image
               src={recipe.imageUrl}
               alt={recipe.title}
@@ -120,7 +120,7 @@ export default function RecipePage() {
               data-ai-hint="recipe food"
             />
           </div>
-          <div className="flex items-center justify-between mb-6 p-4 bg-secondary rounded-lg border">
+          <div className="flex items-center justify-between mb-6 p-4 bg-secondary rounded-xl border">
             <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -157,7 +157,7 @@ export default function RecipePage() {
               <h2 className="text-2xl font-headline mb-4">Ingredients</h2>
               <ul className="space-y-3">
                 {recipe.ingredients.map((ing, index) => (
-                  <li key={index} className="flex items-start bg-secondary/50 p-3 rounded-md border">
+                  <li key={index} className="flex items-start bg-secondary/50 p-3 rounded-lg border">
                     <span className="text-primary mr-3 mt-1">&#10003;</span>
                     <div>
                       <span className="font-semibold text-accent-foreground">{ing.name}</span>

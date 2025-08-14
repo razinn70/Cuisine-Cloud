@@ -64,7 +64,7 @@ export default function Home() {
       </header>
 
       {user && (
-        <section className="mb-16 bg-secondary/50 rounded-lg p-6 md:p-8">
+        <section className="mb-16 bg-secondary/50 rounded-xl p-6 md:p-8">
            <h2 className="text-3xl font-headline mb-8 flex items-center gap-3">
              <Wand2 className="w-7 h-7 text-primary" />
              Recommended for You
