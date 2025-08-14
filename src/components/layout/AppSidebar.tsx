@@ -10,13 +10,14 @@ import {
   SidebarMenuButton,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ChefHat, UtensilsCrossed, Plus, Calendar, BarChart3 } from "lucide-react";
+import { ChefHat, UtensilsCrossed, Plus, Calendar, BarChart3, Wand2 } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
 
 const navLinks = [
   { href: "/", label: "Discover", icon: UtensilsCrossed },
   { href: "/create-recipe", label: "Create Recipe", icon: Plus },
   { href: "/meal-planner", label: "Meal Planner", icon: Calendar },
+  { href: "/generate-recipe", label: "Generate Recipe", icon: Wand2, pro: true },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
 ];
 
@@ -41,7 +42,7 @@ export default function AppSidebar() {
         <SidebarMenu>
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
-            if (!user && (link.href === '/create-recipe' || link.href === '/meal-planner' || link.href === '/analytics')) {
+            if (!user && (link.href === '/create-recipe' || link.href === '/meal-planner' || link.href === '/analytics' || link.href === '/generate-recipe')) {
               return null;
             }
             return (
