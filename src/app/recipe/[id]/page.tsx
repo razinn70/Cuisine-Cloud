@@ -97,21 +97,21 @@ export default function RecipePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid lg:grid-cols-3 gap-12">
+      <div className="grid lg:grid-cols-3 gap-x-12">
         <div className="lg:col-span-2">
           {/* Header */}
           <header className="mb-6">
             <Badge variant="secondary" className="mb-2">
               {recipe.author}
             </Badge>
-            <h1 className="text-4xl lg:text-5xl font-headline font-bold text-accent mb-4">
+            <h1 className="text-4xl lg:text-5xl font-headline font-bold text-accent-foreground mb-4 tracking-tight">
               {recipe.title}
             </h1>
             <p className="text-lg text-muted-foreground">{recipe.description}</p>
           </header>
 
           {/* Image and Meta */}
-          <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-6 shadow-md">
+          <div className="relative aspect-video w-full rounded-lg overflow-hidden mb-6 shadow-lg">
             <Image
               src={recipe.imageUrl}
               alt={recipe.title}
@@ -120,7 +120,7 @@ export default function RecipePage() {
               data-ai-hint="recipe food"
             />
           </div>
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 p-4 bg-secondary rounded-lg border">
             <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -131,7 +131,7 @@ export default function RecipePage() {
                 <span>{recipe.servings} Servings</span>
               </div>
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-primary" />
+                <Star className="w-5 h-5 text-yellow-500" />
                 <span>{recipe.rating}/5.0</span>
               </div>
             </div>
@@ -155,13 +155,13 @@ export default function RecipePage() {
           <div className="grid md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
               <h2 className="text-2xl font-headline mb-4">Ingredients</h2>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {recipe.ingredients.map((ing, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="text-primary mr-2 mt-1">&#10003;</span>
+                  <li key={index} className="flex items-start bg-secondary/50 p-3 rounded-md border">
+                    <span className="text-primary mr-3 mt-1">&#10003;</span>
                     <div>
-                      <span className="font-semibold">{ing.name}</span>
-                       {ing.quantity && ` - ${ing.quantity}`}
+                      <span className="font-semibold text-accent-foreground">{ing.name}</span>
+                       {ing.quantity && <span className="text-muted-foreground text-sm"> - {ing.quantity}</span>}
                     </div>
                   </li>
                 ))}
@@ -172,10 +172,10 @@ export default function RecipePage() {
               <ol className="space-y-4">
                 {recipe.instructions.map((step, index) => (
                   <li key={index} className="flex">
-                    <span className="bg-primary text-primary-foreground rounded-full h-6 w-6 text-sm flex items-center justify-center font-bold mr-4 flex-shrink-0 mt-1">
+                    <span className="bg-primary text-primary-foreground rounded-full h-8 w-8 text-lg flex items-center justify-center font-bold mr-4 flex-shrink-0 mt-1">
                       {index + 1}
                     </span>
-                    <p className="flex-1">{step}</p>
+                    <p className="flex-1 pt-1.5">{step}</p>
                   </li>
                 ))}
               </ol>
@@ -184,8 +184,8 @@ export default function RecipePage() {
         </div>
 
         {/* Sidebar */}
-        <aside className="lg:col-span-1 space-y-8">
-          <Card>
+        <aside className="lg:col-span-1 space-y-8 sticky top-24 h-fit">
+          <Card className="shadow-md">
             <CardHeader>
               <CardTitle className="font-headline text-xl">
                 Nutritional Information
@@ -193,27 +193,27 @@ export default function RecipePage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="flex justify-between">
+                <li className="flex justify-between items-baseline">
                   <span>Calories:</span>{" "}
-                  <span className="font-semibold text-foreground">
+                  <span className="font-semibold text-foreground text-lg">
                     {recipe.nutrition.calories}
                   </span>
                 </li>
-                <li className="flex justify-between">
+                <li className="flex justify-between items-baseline">
                   <span>Protein:</span>{" "}
-                  <span className="font-semibold text-foreground">
+                  <span className="font-semibold text-foreground text-lg">
                     {recipe.nutrition.protein}
                   </span>
                 </li>
-                <li className="flex justify-between">
+                <li className="flex justify-between items-baseline">
                   <span>Carbs:</span>{" "}
-                  <span className="font-semibold text-foreground">
+                  <span className="font-semibold text-foreground text-lg">
                     {recipe.nutrition.carbs}
                   </span>
                 </li>
-                <li className="flex justify-between">
+                <li className="flex justify-between items-baseline">
                   <span>Fat:</span>{" "}
-                  <span className="font-semibold text-foreground">
+                  <span className="font-semibold text-foreground text-lg">
                     {recipe.nutrition.fat}
                   </span>
                 </li>

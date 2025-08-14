@@ -50,32 +50,44 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="space-y-8">
        {user && (
-         <Card className="mb-8">
-          <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-              <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0) ?? 'U'}</AvatarFallback>
-            </Avatar>
-            <div className="text-center sm:text-left">
-              <h1 className="text-3xl font-headline text-accent">{user.displayName || "Cuisine Cloud User"}</h1>
-              <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-2 mt-1">
-                <Mail className="w-4 h-4" />
-                {user.email}
-              </p>
-              <p className="mt-2 max-w-xl">Passionate home cook exploring flavors from around the world. My kitchen is my happy place!</p>
+         <div className="relative h-48 md:h-64 w-full">
+            <Image 
+                src="https://placehold.co/1200x400.png"
+                alt="Profile banner"
+                fill
+                className="object-cover"
+                data-ai-hint="culinary background"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 container mx-auto">
+                 <Card className="mb-8 bg-background/80 backdrop-blur-sm">
+                    <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-6">
+                        <Avatar className="h-24 w-24 border-4 border-background ring-4 ring-primary">
+                        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                        <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0) ?? 'U'}</AvatarFallback>
+                        </Avatar>
+                        <div className="text-center sm:text-left">
+                        <h1 className="text-3xl font-headline text-accent-foreground">{user.displayName || "Cuisine Cloud User"}</h1>
+                        <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-2 mt-1">
+                            <Mail className="w-4 h-4" />
+                            {user.email}
+                        </p>
+                        <p className="mt-2 max-w-xl text-sm">Passionate home cook exploring flavors from around the world. My kitchen is my happy place!</p>
+                        </div>
+                        <div className="sm:ml-auto">
+                        <Button variant="outline">
+                            <Settings className="w-4 h-4 mr-2" /> Edit Profile
+                        </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-            <div className="sm:ml-auto">
-              <Button variant="outline">
-                <Settings className="w-4 h-4 mr-2" /> Edit Profile
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+         </div>
       )}
 
-      <div className="space-y-8">
+      <div className="container mx-auto px-4 py-8 space-y-8 mt-16">
         <div>
           <h2 className="text-2xl font-headline mb-4">My Creations</h2>
            {loading ? (

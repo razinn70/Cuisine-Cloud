@@ -1,7 +1,7 @@
 "use client";
 
 import RecipeCard from "@/components/recipes/RecipeCard";
-import { Loader2 } from "lucide-react";
+import { Loader2, Utensils } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getRecipes } from "@/services/recipe";
 import { Recipe, RecommendedRecipes } from "@/types";
@@ -52,19 +52,19 @@ export default function Home() {
   }, [user]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <header className="text-center mb-12">
-        <h1 className="text-5xl font-headline text-accent mb-4">
+    <div className="container mx-auto px-4 py-8 md:py-12">
+      <header className="text-center mb-16">
+        <h1 className="text-4xl md:text-6xl font-headline font-bold text-accent-foreground mb-4 tracking-tighter">
           Welcome to Cuisine Cloud
         </h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
           Explore thousands of recipes, plan your meals, and get smart cooking
           suggestions tailored just for you.
         </p>
       </header>
 
       {user && (
-        <section className="mb-12">
+        <section className="mb-16 bg-secondary/50 rounded-lg p-6 md:p-8">
            <h2 className="text-3xl font-headline mb-8 flex items-center gap-3">
              <Wand2 className="w-7 h-7 text-primary" />
              Recommended for You
@@ -73,10 +73,10 @@ export default function Home() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div key={i} className="flex flex-col space-y-3">
-                    <Skeleton className="h-[200px] w-full rounded-xl" />
+                    <Skeleton className="h-[220px] w-full rounded-xl" />
                     <div className="space-y-2">
-                      <Skeleton className="h-4 w-[250px]" />
-                      <Skeleton className="h-4 w-[200px]" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-4/5" />
                     </div>
                   </div>
                 ))}
@@ -88,8 +88,8 @@ export default function Home() {
                   return recipe ? (
                     <div key={rec.recipeId}>
                         <RecipeCard recipe={recipe} />
-                        <p className="text-sm text-muted-foreground mt-2 p-2 bg-secondary/50 rounded-md">
-                          <strong>Reason:</strong> {rec.reason}
+                        <p className="text-sm text-muted-foreground mt-2 p-3 bg-background rounded-md border">
+                          <strong className="text-accent-foreground">AI Suggestion:</strong> {rec.reason}
                         </p>
                     </div>
                   ) : null;
@@ -105,15 +105,18 @@ export default function Home() {
       )}
 
       <section>
-        <h2 className="text-3xl font-headline mb-8">Featured Recipes</h2>
+        <h2 className="text-3xl font-headline mb-8 flex items-center gap-3">
+          <Utensils className="w-7 h-7 text-primary" />
+          Featured Recipes
+        </h2>
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {Array.from({ length: 8 }).map((_, i) => (
                <div key={i} className="flex flex-col space-y-3">
-                <Skeleton className="h-[200px] w-full rounded-xl" />
+                <Skeleton className="h-[220px] w-full rounded-xl" />
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-[250px]" />
-                  <Skeleton className="h-4 w-[200px]" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-4/5" />
                 </div>
               </div>
             ))}
