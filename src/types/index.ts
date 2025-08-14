@@ -25,5 +25,5 @@ export interface Recipe {
   nutrition: NutritionInfo;
   author: string;
   authorId: string;
-  createdAt: Timestamp;
+  createdAt?: Timestamp;
 }

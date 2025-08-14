@@ -68,9 +68,13 @@ export default function CreateRecipePage() {
         description: values.description,
         cookTime: values.cookTime,
         servings: values.servings,
-        ingredients: values.ingredients.split('\n').map(line => ({ name: line, quantity: '' })), // Basic parsing
-        instructions: values.instructions.split('\n'), // Basic parsing
-        imageUrl: 'https://placehold.co/600x400.png', // Placeholder for now
+        ingredients: values.ingredients.split('\n').map(line => {
+            const [quantity, ...nameParts] = line.split(' ');
+            const name = nameParts.join(' ');
+            return { name: name || line, quantity: name ? quantity : '' };
+        }),
+        instructions: values.instructions.split('\n'),
+        imageUrl: 'https://placehold.co/600x400.png',
         nutrition: { calories: 'N/A', protein: 'N/A', carbs: 'N/A', fat: 'N/A' }, // Placeholder
         author: user.displayName || "Anonymous",
         authorId: user.uid,
@@ -200,13 +204,13 @@ export default function CreateRecipePage() {
                     <FormLabel>Ingredients</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="List each ingredient on a new line."
+                        placeholder={"List each ingredient on a new line. e.g., '1 cup Flour'"}
                         rows={8}
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      One ingredient per line. e.g., "1 cup Flour"
+                      One ingredient per line, with quantity first (e.g., "1 cup Flour").
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
