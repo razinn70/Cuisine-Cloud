@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { smartRecipeTool } from "@/ai/flows/smart-recipe-tool";
 import type { Recipe } from "@/types";
 import {
@@ -25,6 +24,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, Upload, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { SmartRecipeToolInputSchema, SmartRecipeToolInput } from "@/types";
+import * as z from 'zod';
 
 const formSchema = z.object({
   dietaryRestrictions: z

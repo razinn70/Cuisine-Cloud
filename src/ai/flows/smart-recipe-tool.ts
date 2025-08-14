@@ -9,19 +9,8 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { SmartRecipeToolInput, SmartRecipeToolInputSchema, SmartRecipeToolOutput, SmartRecipeToolOutputSchema } from '@/types';
 
-const SmartRecipeToolInputSchema = z.object({
-  recipe: z.string().optional().describe('The recipe to be modified, as text.'),
-  fileDataUri: z.string().optional().describe("An image or document of a recipe, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
-  dietaryRestrictions: z.string().describe('The dietary restrictions to consider when modifying the recipe.'),
-});
-export type SmartRecipeToolInput = z.infer<typeof SmartRecipeToolInputSchema>;
-
-const SmartRecipeToolOutputSchema = z.object({
-  modifiedRecipe: z.string().describe('The modified recipe with suggestions for substitutions or modifications.'),
-});
-export type SmartRecipeToolOutput = z.infer<typeof SmartRecipeToolOutputSchema>;
 
 export async function smartRecipeTool(input: SmartRecipeToolInput): Promise<SmartRecipeToolOutput> {
   return smartRecipeToolFlow(input);

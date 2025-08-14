@@ -138,3 +138,16 @@ export const GetIngredientsOutputSchema = z.object({
   ingredients: z.array(z.string()).describe("A flat list of aggregated ingredients."),
 });
 export type GetIngredientsOutput = z.infer<typeof GetIngredientsOutputSchema>;
+
+// Schemas for Smart Recipe Tool
+export const SmartRecipeToolInputSchema = z.object({
+  recipe: z.string().optional().describe('The recipe to be modified, as text.'),
+  fileDataUri: z.string().optional().describe("An image or document of a recipe, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
+  dietaryRestrictions: z.string().describe('The dietary restrictions to consider when modifying the recipe.'),
+});
+export type SmartRecipeToolInput = z.infer<typeof SmartRecipeToolInputSchema>;
+
+export const SmartRecipeToolOutputSchema = z.object({
+  modifiedRecipe: z.string().describe('The modified recipe with suggestions for substitutions or modifications.'),
+});
+export type SmartRecipeToolOutput = z.infer<typeof SmartRecipeToolOutputSchema>;
