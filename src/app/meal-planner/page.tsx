@@ -36,6 +36,7 @@ import {
   generateShoppingList,
   ShoppingListCategory,
 } from "@/ai/flows/shopping-list-flow";
+import { getIngredientsForRecipes } from "@/ai/flows/get-ingredients-for-recipes-flow";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
@@ -45,15 +46,6 @@ const formSchema = z.object({
     .max(200, "Please keep your request under 200 characters."),
 });
 
-const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
 const mealTypes = ["Breakfast", "Lunch", "Dinner"];
 
 export default function MealPlannerPage() {
@@ -96,17 +88,38 @@ export default function MealPlannerPage() {
     setShoppingList([]);
 
     try {
-      // Step 1: Generate the meal plan and get the aggregated ingredients list
+      // Step 1: Generate the meal plan to get recipe names
+      const recipeSnippets = recipes.map(({ title, description }) => ({ title, description }));
       const generatedPlan = await generateMealPlan({
         prompt: values.prompt,
-        recipes,
+        recipes: recipeSnippets,
       });
       setMealPlan(generatedPlan);
 
-      // Step 2: Use the ingredients list to generate the shopping list
-      if (generatedPlan.ingredients && generatedPlan.ingredients.length > 0) {
+      const recipeNamesInPlan = Object.values(generatedPlan.plan)
+        .flatMap(day => Object.values(day))
+        .filter((meal): meal is string => !!meal);
+        
+      if (recipeNamesInPlan.length === 0) {
+        toast({
+          variant: "default",
+          title: "Meal Plan",
+          description: "No recipes were found for your request.",
+        });
+        return;
+      }
+      
+      const recipesInPlan = recipes.filter(r => recipeNamesInPlan.includes(r.title));
+
+      // Step 2: Get aggregated ingredients for the selected recipes
+      const { ingredients } = await getIngredientsForRecipes({
+        recipes: recipesInPlan,
+      });
+
+      // Step 3: Use the ingredients list to generate the shopping list
+      if (ingredients && ingredients.length > 0) {
         const generatedShoppingList = await generateShoppingList({
-          ingredients: generatedPlan.ingredients,
+          ingredients,
         });
         setShoppingList(generatedShoppingList.shoppingList);
       } else {
@@ -123,7 +136,7 @@ export default function MealPlannerPage() {
         variant: "destructive",
         title: "Generation Failed",
         description:
-          "There was an error generating your meal plan. Please try again.",
+          "Could not generate a meal plan. This feature requires an internet connection. Please try again.",
       });
     } finally {
       setGenerating(false);
