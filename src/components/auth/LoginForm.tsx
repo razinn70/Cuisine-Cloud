@@ -13,6 +13,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { loginUser } from "@/ai/flows/user-flow";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address."),
@@ -20,6 +26,10 @@ const formSchema = z.object({
 });
 
 export function LoginForm() {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -28,9 +38,33 @@ export function LoginForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    alert("Login submitted! (Check console for data)");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    try {
+        const result = await loginUser(values);
+        if (result.success) {
+            toast({
+                title: "Login Successful",
+                description: `Welcome back, ${result.user?.name}!`,
+            });
+            router.push('/');
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: result.message,
+            });
+        }
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "An unexpected error occurred.",
+            description: "Please try again later.",
+        });
+        console.error(error);
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -62,7 +96,8 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Login
         </Button>
       </form>

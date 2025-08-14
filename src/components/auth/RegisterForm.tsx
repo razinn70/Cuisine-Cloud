@@ -13,6 +13,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { createUser } from "@/ai/flows/user-flow";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -21,6 +27,10 @@ const formSchema = z.object({
 });
 
 export function RegisterForm() {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,9 +40,33 @@ export function RegisterForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    alert("Registration submitted! (Check console for data)");
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true);
+    try {
+      const result = await createUser(values);
+      if (result.success) {
+        toast({
+          title: "Registration Successful",
+          description: "Welcome! Please log in to continue.",
+        });
+        router.push('/login');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Registration Failed",
+          description: result.message,
+        });
+      }
+    } catch (error) {
+       toast({
+          variant: "destructive",
+          title: "An unexpected error occurred.",
+          description: "Please try again later.",
+        });
+      console.error(error);
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -77,7 +111,8 @@ export function RegisterForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Create Account
         </Button>
       </form>
