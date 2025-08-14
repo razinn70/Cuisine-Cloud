@@ -1,3 +1,4 @@
+
 "use client";
 
 import RecipeCard from "@/components/recipes/RecipeCard";
