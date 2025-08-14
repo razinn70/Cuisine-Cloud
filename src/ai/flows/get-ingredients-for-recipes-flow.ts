@@ -5,18 +5,9 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { GetIngredientsInput, GetIngredientsOutput, GetIngredientsInputSchema, GetIngredientsOutputSchema } from '@/types';
 import { Recipe } from '@/types';
 
-export const GetIngredientsInputSchema = z.object({
-  recipes: z.array(z.any()).describe("A list of recipe objects to extract ingredients from."),
-});
-export type GetIngredientsInput = z.infer<typeof GetIngredientsInputSchema>;
-
-export const GetIngredientsOutputSchema = z.object({
-  ingredients: z.array(z.string()).describe("A flat list of all ingredients (including quantities) from the provided recipes."),
-});
-export type GetIngredientsOutput = z.infer<typeof GetIngredientsOutputSchema>;
 
 export async function getIngredientsForRecipes(input: GetIngredientsInput): Promise<GetIngredientsOutput> {
   return getIngredientsForRecipesFlow(input);

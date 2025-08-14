@@ -3,24 +3,7 @@
  * @fileOverview Generates a categorized shopping list from a flat list of ingredients.
  */
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-
-export const ShoppingListCategorySchema = z.object({
-    category: z.string().describe("The category of the shopping list items (e.g., Produce, Dairy, Meat, Pantry)."),
-    items: z.array(z.string()).describe("A list of food items in this category, without quantities."),
-});
-export type ShoppingListCategory = z.infer<typeof ShoppingListCategorySchema>;
-
-const ShoppingListSchema = z.object({
-  shoppingList: z.array(ShoppingListCategorySchema),
-});
-export type ShoppingList = z.infer<typeof ShoppingListSchema>;
-
-
-const GenerateShoppingListInputSchema = z.object({
-  ingredients: z.array(z.string()).describe("A flat list of ingredients, including quantities. e.g., ['1 cup Flour', '2 eggs']"),
-});
-export type GenerateShoppingListInput = z.infer<typeof GenerateShoppingListInputSchema>;
+import { GenerateShoppingListInput, ShoppingList, ShoppingListSchema, GenerateShoppingListInputSchema } from '@/types';
 
 
 export async function generateShoppingList(input: GenerateShoppingListInput): Promise<ShoppingList> {

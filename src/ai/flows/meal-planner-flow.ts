@@ -6,7 +6,6 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { Recipe } from '@/types';
 import { GenerateMealPlanInput, GenerateMealPlanInputSchema, MealPlan, MealPlanSchema } from '@/types';
 
 

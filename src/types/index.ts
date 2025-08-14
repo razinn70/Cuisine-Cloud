@@ -107,3 +107,22 @@ export const GenerateMealPlanInputSchema = z.object({
   recipes: z.array(z.custom<Pick<Recipe, 'title' | 'description'>>()).describe("A list of available recipes with their titles and descriptions."),
 });
 export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
+
+
+// Schemas for Shopping List flow
+export const ShoppingListCategorySchema = z.object({
+    category: z.string().describe("The category of the shopping list items (e.g., Produce, Dairy, Meat, Pantry)."),
+    items: z.array(z.string()).describe("A list of food items in this category, without quantities."),
+});
+export type ShoppingListCategory = z.infer<typeof ShoppingListCategorySchema>;
+
+export const ShoppingListSchema = z.object({
+  shoppingList: z.array(ShoppingListCategorySchema),
+});
+export type ShoppingList = z.infer<typeof ShoppingListSchema>;
+
+
+export const GenerateShoppingListInputSchema = z.object({
+  ingredients: z.array(z.string()).describe("A flat list of ingredients, including quantities. e.g., ['1 cup Flour', '2 eggs']"),
+});
+export type GenerateShoppingListInput = z.infer<typeof GenerateShoppingListInputSchema>;
