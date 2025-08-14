@@ -1,0 +1,25 @@
+export interface Ingredient {
+  name: string;
+  quantity: string;
+}
+
+export interface NutritionInfo {
+  calories: string;
+  protein: string;
+  carbs: string;
+  fat: string;
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  cookTime: string;
+  servings: string;
+  rating: number;
+  ingredients: Ingredient[];
+  instructions: string[];
+  nutrition: NutritionInfo;
+  author: string;
+}
