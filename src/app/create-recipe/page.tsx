@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { logEvent } from "@/services/analytics";
+import { analyzeRecipe } from "@/ai/flows/analyze-recipe-flow";
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
@@ -64,6 +65,14 @@ export default function CreateRecipePage() {
     setIsLoading(true);
 
     try {
+      // Step 1: Analyze the recipe to get nutritional information.
+      const nutrition = await analyzeRecipe({
+        title: values.title,
+        ingredients: values.ingredients.split('\n'),
+        instructions: values.instructions.split('\n'),
+      });
+
+      // Step 2: Create the recipe object with the analyzed data.
       const newRecipe = {
         title: values.title,
         description: values.description,
@@ -76,7 +85,7 @@ export default function CreateRecipePage() {
         }),
         instructions: values.instructions.split('\n'),
         imageUrl: 'https://placehold.co/600x400.png',
-        nutrition: { calories: 'N/A', protein: 'N/A', carbs: 'N/A', fat: 'N/A' }, // Placeholder
+        nutrition: nutrition, 
         author: user.displayName || "Anonymous",
         authorId: user.uid,
       };
@@ -243,7 +252,7 @@ export default function CreateRecipePage() {
 
               <Button type="submit" size="lg" disabled={isLoading}>
                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Recipe
+                {isLoading ? 'Analyzing Nutrition...' : 'Create Recipe'}
               </Button>
             </form>
           </Form>

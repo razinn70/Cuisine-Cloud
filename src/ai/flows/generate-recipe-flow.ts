@@ -4,17 +4,19 @@
  */
 import { ai } from '@/ai/genkit';
 import { GenerateRecipeInput, GeneratedRecipe, GenerateRecipeInputSchema, GeneratedRecipeSchema } from '@/types';
+import { analyzeRecipe } from './analyze-recipe-flow';
 
 
 export async function generateRecipe(input: GenerateRecipeInput): Promise<GeneratedRecipe> {
     return generateRecipeFlow(input);
 }
 
-
-const prompt = ai.definePrompt({
-    name: 'generateRecipePrompt',
+// This prompt is now focused only on generating the creative parts of the recipe.
+const creativePrompt = ai.definePrompt({
+    name: 'generateCreativeRecipePrompt',
     input: { schema: GenerateRecipeInputSchema },
-    output: { schema: GeneratedRecipeSchema },
+    // The output is now just the core recipe, without nutrition.
+    output: { schema: GeneratedRecipeSchema.omit({ nutrition: true }) },
     prompt: `You are an expert chef who can create amazing recipes from a limited set of ingredients.
 A user has the following ingredients available:
 ---
@@ -28,7 +30,7 @@ And has the following preferences for the meal:
 
 Your task is to generate a complete, delicious, and easy-to-follow recipe based on this information. You can assume common pantry staples like salt, pepper, and oil are available if needed.
 
-Generate the recipe in the specified JSON format. Ensure all fields are filled out with realistic and helpful information.
+Generate the recipe in the specified JSON format. Do NOT include the 'nutrition' field.
 `,
 });
 
@@ -40,10 +42,26 @@ const generateRecipeFlow = ai.defineFlow(
     outputSchema: GeneratedRecipeSchema,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-        throw new Error("The AI failed to generate a recipe. Please try again with different ingredients.");
+    // Step 1: Generate the creative recipe content (ingredients, instructions, etc.)
+    const { output: creativeOutput } = await creativePrompt(input);
+    if (!creativeOutput) {
+        throw new Error("The AI failed to generate recipe content. Please try again.");
     }
-    return output;
+
+    // Step 2: Use the specialized nutrition flow to analyze the generated recipe.
+    // This is more reliable than asking one model to do everything.
+    const nutrition = await analyzeRecipe({
+        title: creativeOutput.title,
+        ingredients: creativeOutput.ingredients.map(i => `${i.quantity} ${i.name}`),
+        instructions: creativeOutput.instructions,
+    });
+
+    // Step 3: Combine the creative output with the nutritional analysis.
+    const fullRecipe: GeneratedRecipe = {
+        ...creativeOutput,
+        nutrition: nutrition,
+    };
+    
+    return fullRecipe;
   }
 );

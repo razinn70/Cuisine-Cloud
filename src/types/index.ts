@@ -6,12 +6,23 @@ export interface Ingredient {
   quantity: string;
 }
 
-export interface NutritionInfo {
-  calories: string;
-  protein: string;
-  carbs: string;
-  fat: string;
-}
+// Zod schema for NutritionInfo
+export const NutritionInfoSchema = z.object({
+  calories: z.string().describe("Estimated calories per serving."),
+  protein: z.string().describe("Estimated protein in grams per serving."),
+  carbs: z.string().describe("Estimated carbohydrates in grams per serving."),
+  fat: z.string().describe("Estimated fat in grams per serving."),
+});
+export type NutritionInfo = z.infer<typeof NutritionInfoSchema>;
+
+// Zod schema for AnalyzeRecipe flow
+export const AnalyzeRecipeInputSchema = z.object({
+  title: z.string().describe("The title of the recipe."),
+  ingredients: z.array(z.string()).describe("A list of ingredients with quantities."),
+  instructions: z.array(z.string()).describe("The cooking instructions."),
+});
+export type AnalyzeRecipeInput = z.infer<typeof AnalyzeRecipeInputSchema>;
+
 
 export interface Recipe {
   id: string;
@@ -66,12 +77,7 @@ export const GeneratedRecipeSchema = z.object({
         quantity: z.string().describe("The quantity of the ingredient (e.g., '1 cup', '2 tbsp')."),
     })).describe("A list of ingredients required for the recipe."),
     instructions: z.array(z.string()).describe("Step-by-step instructions for preparing the dish."),
-    nutrition: z.object({
-        calories: z.string().describe("Estimated calories per serving."),
-        protein: z.string().describe("Estimated protein in grams per serving."),
-        carbs: z.string().describe("Estimated carbohydrates in grams per serving."),
-        fat: z.string().describe("Estimated fat in grams per serving."),
-    }).describe("Estimated nutritional information per serving."),
+    nutrition: NutritionInfoSchema.describe("Estimated nutritional information per serving."),
 });
 export type GeneratedRecipe = z.infer<typeof GeneratedRecipeSchema>;
 
