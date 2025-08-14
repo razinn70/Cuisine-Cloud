@@ -18,6 +18,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "./AuthProvider";
+import { logEvent } from "@/services/analytics";
 
 
 const formSchema = z.object({
@@ -44,7 +45,10 @@ export function RegisterForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await signUp(values.email, values.password, values.name);
+      const userCredential = await signUp(values.email, values.password, values.name);
+      
+      await logEvent('user_registered', { userId: userCredential.user.uid, email: userCredential.user.email });
+
       toast({
         title: "Registration Successful",
         description: "Welcome! Please log in to continue.",

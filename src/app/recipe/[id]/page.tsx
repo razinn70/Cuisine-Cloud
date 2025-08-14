@@ -26,10 +26,13 @@ import SmartRecipeTool from "@/components/ai/SmartRecipeTool";
 import { useEffect, useState } from "react";
 import { getRecipe } from "@/services/recipe";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { logEvent } from "@/services/analytics";
 
 export default function RecipePage() {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,6 +44,7 @@ export default function RecipePage() {
         const fetchedRecipe = await getRecipe(id);
         if (fetchedRecipe) {
           setRecipe(fetchedRecipe);
+          await logEvent('recipe_viewed', { recipeId: id, userId: user?.uid, recipeTitle: fetchedRecipe.title });
         } else {
           notFound();
         }
@@ -52,7 +56,7 @@ export default function RecipePage() {
       }
     };
     fetchRecipe();
-  }, [id]);
+  }, [id, user?.uid]);
 
   if (loading) {
     return (

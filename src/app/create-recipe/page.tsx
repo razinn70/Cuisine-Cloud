@@ -23,6 +23,7 @@ import { createRecipe } from "@/services/recipe";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { logEvent } from "@/services/analytics";
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
@@ -81,6 +82,8 @@ export default function CreateRecipePage() {
       };
       
       const recipeId = await createRecipe(newRecipe);
+      
+      await logEvent('recipe_created', { recipeId: recipeId, userId: user.uid, recipeTitle: newRecipe.title });
 
       toast({
         title: "Recipe Created!",

@@ -27,3 +27,11 @@ export interface Recipe {
   authorId: string;
   createdAt?: Timestamp;
 }
+
+
+export interface AnalyticsEvent {
+    id: string;
+    name: string;
+    data: { [key: string]: any };
+    createdAt: Timestamp;
+}
