@@ -14,14 +14,15 @@ import { getUserRecipes } from "@/services/recipe";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
-  const [savedRecipes, setSavedRecipes] = useState<Recipe[]>([]);
+  const { user, loading: authLoading } = useAuth();
   const [userCreations, setUserCreations] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (user) {
       const fetchUserCreations = async () => {
+        setLoading(true);
         try {
           const creations = await getUserRecipes(user.uid);
           setUserCreations(creations);
@@ -35,9 +36,31 @@ export default function ProfilePage() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
   
-  if (!user && !loading) {
+  if (authLoading) {
+    return (
+      <div className="space-y-8">
+        <Skeleton className="h-48 md:h-64 w-full" />
+         <div className="container mx-auto px-4 py-8 space-y-8 mt-16">
+          <h2 className="text-2xl font-headline mb-4">My Creations</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex flex-col space-y-3">
+                    <Skeleton className="h-[200px] w-full rounded-xl" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-[250px]" />
+                        <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                    </div>
+                ))}
+            </div>
+         </div>
+      </div>
+    )
+  }
+  
+  if (!user) {
     return (
        <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-headline mb-4">Please Log In</h1>
@@ -51,41 +74,40 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-8">
-       {user && (
-         <div className="relative h-48 md:h-64 w-full">
-            <Image 
-                src="https://placehold.co/1200x400.png"
-                alt="Profile banner"
-                fill
-                className="object-cover"
-                data-ai-hint="culinary background"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4 container mx-auto">
-                 <Card className="mb-8 bg-background/80 backdrop-blur-sm">
-                    <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-6">
-                        <Avatar className="h-24 w-24 border-4 border-background ring-4 ring-primary">
-                        <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
-                        <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0) ?? 'U'}</AvatarFallback>
-                        </Avatar>
-                        <div className="text-center sm:text-left">
-                        <h1 className="text-3xl font-headline text-accent-foreground">{user.displayName || "Cuisine Cloud User"}</h1>
-                        <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-2 mt-1">
-                            <Mail className="w-4 h-4" />
-                            {user.email}
-                        </p>
-                        <p className="mt-2 max-w-xl text-sm">Passionate home cook exploring flavors from around the world. My kitchen is my happy place!</p>
-                        </div>
-                        <div className="sm:ml-auto">
-                        <Button variant="outline">
-                            <Settings className="w-4 h-4 mr-2" /> Edit Profile
-                        </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-         </div>
-      )}
+        <div className="relative h-48 md:h-64 w-full">
+        <Image 
+            src="https://placehold.co/1200x400.png"
+            alt="Profile banner"
+            fill
+            className="object-cover"
+            data-ai-hint="culinary background"
+            priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-4 container mx-auto">
+                <Card className="mb-8 bg-background/80 backdrop-blur-sm">
+                <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-6">
+                    <Avatar className="h-24 w-24 border-4 border-background ring-4 ring-primary">
+                    <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
+                    <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0) ?? 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div className="text-center sm:text-left">
+                    <h1 className="text-3xl font-headline text-accent-foreground">{user.displayName || "Cuisine Cloud User"}</h1>
+                    <p className="text-muted-foreground flex items-center justify-center sm:justify-start gap-2 mt-1">
+                        <Mail className="w-4 h-4" />
+                        {user.email}
+                    </p>
+                    <p className="mt-2 max-w-xl text-sm">Passionate home cook exploring flavors from around the world. My kitchen is my happy place!</p>
+                    </div>
+                    <div className="sm:ml-auto">
+                    <Button variant="outline">
+                        <Settings className="w-4 h-4 mr-2" /> Edit Profile
+                    </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+        </div>
 
       <div className="container mx-auto px-4 py-8 space-y-8 mt-16">
         <div>

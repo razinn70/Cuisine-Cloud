@@ -104,7 +104,7 @@ export type MealPlan = z.infer<typeof MealPlanSchema>;
 
 export const GenerateMealPlanInputSchema = z.object({
   prompt: z.string().describe("The user's request for the meal plan (e.g., dietary needs, number of days)."),
-  recipes: z.array(z.custom<Pick<Recipe, 'title' | 'description'>>()).describe("A list of available recipes with their titles and descriptions."),
+  recipes: z.array(z.object({ title: z.string(), description: z.string() })).describe("A list of available recipes with their titles and descriptions."),
 });
 export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
 

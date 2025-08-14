@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, Loader2 } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -19,11 +19,12 @@ import Link from "next/link";
 import { formatDistanceToNow } from 'date-fns';
 
 export default function AnalyticsDashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [events, setEvents] = useState<AnalyticsEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
         setLoading(false);
         return;
@@ -39,12 +40,28 @@ export default function AnalyticsDashboardPage() {
       }
     };
     fetchEvents();
-  }, [user]);
+  }, [user, authLoading]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
-      <div className="flex items-center justify-center h-full p-8">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="container mx-auto px-4 py-8">
+      <header className="mb-8">
+        <h1 className="text-4xl font-headline text-accent mb-2 flex items-center gap-3">
+          <BarChart3 className="w-8 h-8" />
+          Analytics Dashboard
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Real-time event stream for key user actions.
+        </p>
+      </header>
+       <Card>
+        <CardHeader>
+          <CardTitle>Recent Events</CardTitle>
+        </CardHeader>
+        <CardContent>
+           <div className="h-96 w-full animate-pulse rounded-md bg-muted" />
+        </CardContent>
+       </Card>
       </div>
     );
   }
@@ -101,7 +118,7 @@ export default function AnalyticsDashboardPage() {
                       </pre>
                     </TableCell>
                     <TableCell className="text-right text-muted-foreground">
-                       {event.createdAt ? formatDistanceToNow(event.createdAt.toDate(), { addSuffix: true }) : 'N/A'}
+                       {event.createdAt ? formatDistanceToNow(new Date(event.createdAt.seconds * 1000), { addSuffix: true }) : 'N/A'}
                     </TableCell>
                   </TableRow>
                 ))
