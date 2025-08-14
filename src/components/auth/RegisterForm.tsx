@@ -13,11 +13,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { createUser } from "@/ai/flows/user-flow";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "./AuthProvider";
 
 
 const formSchema = z.object({
@@ -30,6 +30,7 @@ export function RegisterForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { signUp } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -43,25 +44,17 @@ export function RegisterForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const result = await createUser(values);
-      if (result.success) {
-        toast({
-          title: "Registration Successful",
-          description: "Welcome! Please log in to continue.",
-        });
-        router.push('/login');
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Registration Failed",
-          description: result.message,
-        });
-      }
-    } catch (error) {
+      await signUp(values.email, values.password, values.name);
+      toast({
+        title: "Registration Successful",
+        description: "Welcome! Please log in to continue.",
+      });
+      router.push('/login');
+    } catch (error: any) {
        toast({
           variant: "destructive",
-          title: "An unexpected error occurred.",
-          description: "Please try again later.",
+          title: "Registration Failed",
+          description: error.message || "An unexpected error occurred. Please try again later.",
         });
       console.error(error);
     } finally {

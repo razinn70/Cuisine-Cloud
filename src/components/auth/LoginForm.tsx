@@ -15,9 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
-import { loginUser } from "@/ai/flows/user-flow";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "./AuthProvider";
 
 
 const formSchema = z.object({
@@ -29,6 +29,7 @@ export function LoginForm() {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const { logIn } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,25 +42,19 @@ export function LoginForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        const result = await loginUser(values);
-        if (result.success) {
+        const user = await logIn(values.email, values.password);
+        if (user) {
             toast({
                 title: "Login Successful",
-                description: `Welcome back, ${result.user?.name}!`,
+                description: `Welcome back, ${user.displayName || user.email}!`,
             });
             router.push('/');
-        } else {
-            toast({
-                variant: "destructive",
-                title: "Login Failed",
-                description: result.message,
-            });
         }
-    } catch (error) {
+    } catch (error: any) {
         toast({
             variant: "destructive",
-            title: "An unexpected error occurred.",
-            description: "Please try again later.",
+            title: "Login Failed",
+            description: error.message || "An unexpected error occurred.",
         });
         console.error(error);
     } finally {
