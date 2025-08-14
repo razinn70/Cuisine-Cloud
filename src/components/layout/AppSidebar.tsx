@@ -5,16 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   SidebarContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { ChefHat, UtensilsCrossed, Plus, Calendar, BarChart3, Wand2, LogOut } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
-import { Button } from "../ui/button";
 
 const navLinks = [
   { href: "/", label: "Discover", icon: UtensilsCrossed },
@@ -30,16 +27,7 @@ export default function AppSidebar() {
 
   return (
     <>
-      <SidebarHeader className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ChefHat className="w-6 h-6 text-primary" />
-          <span className="font-bold font-headline text-lg group-data-[collapsible=icon]:hidden">
-            Cuisine Cloud
-          </span>
-        </div>
-         <SidebarTrigger className="group-data-[mobile=true]:hidden" />
-      </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="pt-8">
         <SidebarMenu>
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
