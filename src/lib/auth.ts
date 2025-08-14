@@ -6,6 +6,11 @@ import { adminAuth } from './firebase/server';
 // It is used in server components and server actions.
 // It is not meant to be used in client components.
 export async function getAuthenticatedUser(): Promise<User | null> {
+    // If adminAuth is not initialized, we can't get the user.
+    if (!adminAuth) {
+        return null;
+    }
+
     const session = cookies().get('session')?.value;
     if (!session) {
         return null;
