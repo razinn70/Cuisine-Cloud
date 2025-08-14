@@ -10,8 +10,7 @@ import {
   Heart,
   Share2,
   Bookmark,
-  Sparkles,
-  Loader2,
+  Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,9 @@ export default function RecipePage() {
         const fetchedRecipe = await getRecipe(id);
         if (fetchedRecipe) {
           setRecipe(fetchedRecipe);
-          await logEvent('recipe_viewed', { recipeId: id, userId: user?.uid, recipeTitle: fetchedRecipe.title });
+          if (user?.uid) {
+            await logEvent('recipe_viewed', { recipeId: id, userId: user.uid, recipeTitle: fetchedRecipe.title });
+          }
         } else {
           notFound();
         }
@@ -101,9 +102,14 @@ export default function RecipePage() {
         <div className="lg:col-span-2">
           {/* Header */}
           <header className="mb-6">
-            <Badge variant="secondary" className="mb-2">
-              {recipe.author}
-            </Badge>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+                <Badge variant="secondary">
+                By {recipe.author}
+                </Badge>
+                {recipe.tags?.map(tag => (
+                    <Badge key={tag} variant="outline">{tag}</Badge>
+                ))}
+            </div>
             <h1 className="text-4xl lg:text-5xl font-headline font-bold text-accent-foreground mb-4 tracking-tight">
               {recipe.title}
             </h1>
@@ -121,17 +127,21 @@ export default function RecipePage() {
             />
           </div>
           <div className="flex items-center justify-between mb-6 p-4 bg-secondary rounded-xl border">
-            <div className="flex items-center gap-6 text-muted-foreground">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
+              <div className="flex items-center gap-2" title="Cook time">
                 <Clock className="w-5 h-5" />
                 <span>{recipe.cookTime}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" title="Servings">
                 <Users className="w-5 h-5" />
                 <span>{recipe.servings} Servings</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-500" />
+               <div className="flex items-center gap-2" title="Difficulty">
+                <Zap className="w-5 h-5" />
+                <span>{recipe.difficulty}</span>
+              </div>
+              <div className="flex items-center gap-2" title="Rating">
+                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
                 <span>{recipe.rating}/5.0</span>
               </div>
             </div>

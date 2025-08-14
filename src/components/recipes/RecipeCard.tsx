@@ -5,7 +5,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Users, Heart } from "lucide-react";
+import { Clock, Star, Users, Heart, Zap } from "lucide-react";
 import type { Recipe } from "@/types";
 import { Button } from "../ui/button";
 
@@ -36,7 +36,9 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
              </Button>
           </div>
            
-          <Badge className="absolute top-3 right-3 bg-primary/80 backdrop-blur-sm border-primary/50 text-primary-foreground">{recipe.author}</Badge>
+          {recipe.tags && recipe.tags[0] && (
+            <Badge className="absolute top-3 right-3 bg-primary/80 backdrop-blur-sm border-primary/50 text-primary-foreground">{recipe.tags[0]}</Badge>
+          )}
 
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <h3 className="font-headline text-lg font-bold text-white leading-tight drop-shadow-md">
@@ -46,18 +48,22 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         </div>
 
         {/* Bottom section with Quick Stats */}
-        <CardContent className="p-4 flex justify-between text-sm text-muted-foreground bg-card">
+        <CardContent className="p-4 flex-wrap justify-between text-sm text-muted-foreground bg-card grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="flex items-center gap-2" title="Cook time">
-            <Clock className="w-4 h-4" />
+            <Clock className="w-4 h-4 text-primary" />
             <span>{recipe.cookTime}</span>
           </div>
           <div className="flex items-center gap-2" title="Servings">
-            <Users className="w-4 h-4" />
+            <Users className="w-4 h-4 text-primary" />
             <span>{recipe.servings}</span>
           </div>
           <div className="flex items-center gap-2" title={`${recipe.rating} stars`}>
             <Star className="w-4 h-4 text-primary fill-primary" />
             <span className="font-semibold">{recipe.rating?.toFixed(1) || 'N/A'}</span>
+          </div>
+          <div className="flex items-center gap-2" title="Difficulty">
+            <Zap className="w-4 h-4 text-primary" />
+            <span className="font-semibold">{recipe.difficulty || 'Medium'}</span>
           </div>
         </CardContent>
       </Card>

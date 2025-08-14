@@ -10,27 +10,32 @@ export const NutritionInfoSchema = z.object({
 });
 export type NutritionInfo = z.infer<typeof NutritionInfoSchema>;
 
-// Main Recipe interface aligned with backend model
-export interface Recipe {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  cookTime: string; // For display, e.g., "45 minutes"
-  servings: string; // For display, e.g., "4 servings"
-  rating: number;
-  ingredients: Ingredient[];
-  instructions: string[];
-  nutrition: NutritionInfo;
-  author: string; // For display
-  authorId: string; // The ID of the author
-  createdAt?: Timestamp;
-}
+export const IngredientSchema = z.object({
+  name: z.string(),
+  quantity: z.string(),
+});
+export type Ingredient = z.infer<typeof IngredientSchema>;
 
-export interface Ingredient {
-  name: string;
-  quantity: string;
-}
+// Main Recipe interface aligned with backend model
+export const RecipeSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  imageUrl: z.string(),
+  cookTime: z.string(), // For display, e.g., "45 minutes"
+  servings: z.string(), // For display, e.g., "4 servings"
+  rating: z.number(),
+  ingredients: z.array(IngredientSchema),
+  instructions: z.array(z.string()),
+  nutrition: NutritionInfoSchema,
+  author: z.string(), // For display
+  authorId: z.string(), // The ID of the author
+  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']).optional(),
+  tags: z.array(z.string()).optional(),
+  createdAt: z.custom<Timestamp>().optional(),
+});
+
+export type Recipe = z.infer<typeof RecipeSchema>;
 
 // Zod schema for AnalyzeRecipe flow
 export const AnalyzeRecipeInputSchema = z.object({
@@ -52,7 +57,6 @@ export interface AnalyticsEvent {
 export const RecommendedRecipesSchema = z.object({
   recommendations: z.array(z.object({
     recipeId: z.string().describe("The ID of the recommended recipe."),
-    title: z.string().describe("The title of the recipe."),
     reason: z.string().describe("A brief, user-facing explanation for why this recipe was recommended."),
   })).describe("A list of personalized recipe recommendations."),
 });
@@ -62,6 +66,12 @@ export type RecommendedRecipes = z.infer<typeof RecommendedRecipesSchema>;
 export const RecommendRecipesInputSchema = z.object({
   userId: z.string().describe("The ID of the user to generate recommendations for."),
   count: z.number().int().positive().optional().default(5).describe("The number of recommendations to generate."),
+  candidateRecipes: z.array(z.object({
+    id: z.string(),
+    title: z.string(),
+    description: z.string(),
+    author: z.string(),
+  })).describe('A list of candidate recipes to choose from for recommendations.'),
 });
 export type RecommendRecipesInput = z.infer<typeof RecommendRecipesInputSchema>;
 

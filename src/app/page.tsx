@@ -6,8 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { recommendRecipes } from "@/ai/flows/recommend-recipes-flow";
 import { getAuthenticatedUser } from "@/lib/auth";
 import { Suspense } from "react";
+import { getRecipe } from "@/services/recipe";
 
-async function Recommendations() {
+
+async function Recommendations({ allRecipes }: { allRecipes: Recipe[] }) {
   const user = await getAuthenticatedUser();
   
   if (!user) {
@@ -16,7 +18,8 @@ async function Recommendations() {
   
   let recommendations: RecommendedRecipes['recommendations'] = [];
   try {
-    const result = await recommendRecipes({ userId: user.uid, count: 3 });
+    const candidateRecipes = allRecipes.map(({ id, title, description, author }) => ({ id, title, description, author }));
+    const result = await recommendRecipes({ userId: user.uid, count: 3, candidateRecipes });
     recommendations = result.recommendations;
   } catch (error) {
     console.error("Failed to fetch recommendations:", error);
@@ -27,14 +30,13 @@ async function Recommendations() {
   if (recommendations.length === 0) {
     return null;
   }
-
-  const recommendedRecipeDetails = await Promise.all(
-    recommendations.map(r => getRecipe(r.recipeId))
+  
+  const recommendedRecipeDetails = allRecipes.filter(recipe => 
+    recommendations.some(rec => rec.recipeId === recipe.id)
   );
 
-  const validRecommendedRecipes = recommendedRecipeDetails.filter(Boolean) as Recipe[];
 
-  if(validRecommendedRecipes.length === 0) {
+  if(recommendedRecipeDetails.length === 0) {
       return null;
   }
   
@@ -45,14 +47,16 @@ async function Recommendations() {
          Recommended for You
         </h2>
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-         {validRecommendedRecipes.map((recipe) => {
+         {recommendedRecipeDetails.map((recipe) => {
             const rec = recommendations.find(r => r.recipeId === recipe.id);
             return (
               <div key={recipe.id}>
                   <RecipeCard recipe={recipe} />
-                  <p className="text-sm text-muted-foreground mt-2 p-3 bg-background rounded-md border">
-                    <strong className="text-accent-foreground">AI Suggestion:</strong> {rec?.reason}
-                  </p>
+                  {rec?.reason && (
+                    <p className="text-sm text-muted-foreground mt-2 p-3 bg-background rounded-md border">
+                        <strong className="text-accent-foreground">AI Suggestion:</strong> {rec.reason}
+                    </p>
+                  )}
               </div>
             )
          })}
@@ -85,7 +89,7 @@ export default async function Home() {
             </div>
         </div>
       }>
-        <Recommendations />
+        <Recommendations allRecipes={recipes} />
       </Suspense>
       
       <section>

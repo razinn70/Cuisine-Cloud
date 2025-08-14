@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { logEvent } from "@/services/analytics";
 import { analyzeRecipe } from "@/ai/flows/analyze-recipe-flow";
+import { Recipe } from "@/types";
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
@@ -76,7 +77,7 @@ export default function CreateRecipePage() {
       });
 
       // Step 2: Create the recipe object with the analyzed data.
-      const newRecipe = {
+      const newRecipe: Omit<Recipe, "id" | "createdAt" | "rating"> = {
         title: values.title,
         description: values.description,
         cookTime: values.cookTime,
@@ -92,6 +93,8 @@ export default function CreateRecipePage() {
         nutrition: nutrition, 
         author: user.displayName || "Anonymous",
         authorId: user.uid,
+        difficulty: 'Intermediate', // Placeholder
+        tags: ['User Created'], // Placeholder
       };
       
       const recipeId = await createRecipe(newRecipe);
