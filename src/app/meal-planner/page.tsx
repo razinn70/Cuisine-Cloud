@@ -96,24 +96,27 @@ export default function MealPlannerPage() {
     setShoppingList([]);
 
     try {
+      // Step 1: Generate the meal plan and get the aggregated ingredients list
       const generatedPlan = await generateMealPlan({
         prompt: values.prompt,
-        recipes: recipes.map(
-          (r) =>
-            `Title: ${r.title}, Description: ${
-              r.description
-            }, Ingredients: ${r.ingredients
-              .map((i) => `${i.quantity} ${i.name}`)
-              .join(", ")}`
-        ),
+        recipes,
       });
       setMealPlan(generatedPlan);
 
-      const generatedShoppingList = await generateShoppingList({
-        mealPlan: generatedPlan,
-        recipes,
-      });
-      setShoppingList(generatedShoppingList.shoppingList);
+      // Step 2: Use the ingredients list to generate the shopping list
+      if (generatedPlan.ingredients && generatedPlan.ingredients.length > 0) {
+        const generatedShoppingList = await generateShoppingList({
+          ingredients: generatedPlan.ingredients,
+        });
+        setShoppingList(generatedShoppingList.shoppingList);
+      } else {
+         toast({
+          variant: "default",
+          title: "Shopping List",
+          description: "No ingredients found for the generated plan.",
+        });
+      }
+      
     } catch (error) {
       console.error("Failed to generate meal plan:", error);
       toast({
@@ -173,7 +176,7 @@ export default function MealPlannerPage() {
                   />
                   <Button
                     type="submit"
-                    disabled={loading || generating}
+                    disabled={loading || generating || recipes.length === 0}
                     className="w-full"
                   >
                     {generating ? (
@@ -183,59 +186,74 @@ export default function MealPlannerPage() {
                     )}
                     Generate Plan
                   </Button>
+                   {recipes.length === 0 && !loading && (
+                      <p className="text-sm text-center text-muted-foreground">You need to create at least one recipe before using the meal planner.</p>
+                  )}
                 </form>
               </Form>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-4">
-                <div className="hidden sm:block"></div>
-                {mealTypes.map((meal) => (
-                  <div
-                    key={meal}
-                    className="text-center font-bold font-headline p-2 text-muted-foreground"
-                  >
-                    {meal}
-                  </div>
-                ))}
-              </div>
-              <Separator />
-              <div className="grid grid-cols-1">
-                {daysOfWeek.map((day) => (
-                  <div
-                    key={day}
-                    className="grid grid-cols-1 sm:grid-cols-4 border-b last:border-b-0"
-                  >
-                    <div className="font-bold p-3 bg-secondary sm:bg-transparent rounded-t-lg sm:rounded-none">
-                      {day}
+           {generating && !mealPlan && (
+             <Card>
+                <CardContent className="p-6">
+                   <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                    <p className="font-medium">Generating your meal plan...</p>
+                    <p className="text-sm text-center">This can take up to 30 seconds. Please wait.</p>
+                   </div>
+                </CardContent>
+             </Card>
+           )}
+
+          {mealPlan && (
+            <Card>
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4">
+                  <div className="hidden sm:block"></div>
+                  {mealTypes.map((meal) => (
+                    <div
+                      key={meal}
+                      className="text-center font-bold font-headline p-2 text-muted-foreground"
+                    >
+                      {meal}
                     </div>
-                    {mealTypes.map((meal) => {
-                      const plannedMeal = (mealPlan?.plan as any)?.[day]?.[
-                        meal
-                      ];
-                      return (
-                        <div
-                          key={`${day}-${meal}`}
-                          className="p-3 border-l min-h-[100px] flex flex-col justify-center hover:bg-secondary/50 transition-colors"
-                        >
-                          {plannedMeal ? (
-                            <div className="text-sm bg-primary/20 text-primary-foreground p-2 rounded-md">
-                              {plannedMeal}
-                            </div>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                              -
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+                <Separator />
+                <div className="grid grid-cols-1">
+                  {Object.entries(mealPlan.plan).map(([day, meals]) => (
+                    <div
+                      key={day}
+                      className="grid grid-cols-1 sm:grid-cols-4 border-b last:border-b-0"
+                    >
+                      <div className="font-bold p-3 bg-secondary sm:bg-transparent rounded-t-lg sm:rounded-none">
+                        {day}
+                      </div>
+                      {mealTypes.map((meal) => {
+                        const plannedMeal = (meals as any)?.[meal];
+                        return (
+                          <div
+                            key={`${day}-${meal}`}
+                            className="p-3 border-l min-h-[100px] flex flex-col justify-center hover:bg-secondary/50 transition-colors"
+                          >
+                            {plannedMeal ? (
+                              <div className="text-sm bg-primary/20 text-primary-foreground p-2 rounded-md">
+                                {plannedMeal}
+                              </div>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                -
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         <aside>
           <Card>

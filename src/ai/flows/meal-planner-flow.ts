@@ -1,11 +1,13 @@
 'use server';
 
 /**
- * @fileOverview Generates a meal plan based on user preferences and available recipes.
+ * @fileOverview Generates a meal plan based on user preferences and available recipes,
+ * and extracts the ingredients for the selected recipes.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { Recipe } from '@/types';
 
 // Define the structure for a single day's meal plan
 const DayPlanSchema = z.object({
@@ -15,15 +17,16 @@ const DayPlanSchema = z.object({
 });
 
 // Define the overall meal plan structure using a record for flexible day names
-const MealPlanSchema = z.object({
+export const MealPlanSchema = z.object({
   plan: z.record(z.string(), DayPlanSchema).describe("The generated meal plan, with days of the week as keys."),
+  ingredients: z.array(z.string()).describe("A flat list of all ingredients (including quantities) from the recipes used in the meal plan."),
 });
 export type MealPlan = z.infer<typeof MealPlanSchema>;
 
 
 const GenerateMealPlanInputSchema = z.object({
   prompt: z.string().describe("The user's request for the meal plan (e.g., dietary needs, number of days)."),
-  recipes: z.array(z.string()).describe("A list of available recipes to choose from, each as a string with title, description, and ingredients."),
+  recipes: z.array(z.custom<Recipe>()).describe("A list of available recipes to choose from."),
 });
 export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
 
@@ -42,16 +45,18 @@ const prompt = ai.definePrompt({
 User Prompt:
 "{{prompt}}"
 
-Available Recipes:
+Available Recipes (JSON format):
 ---
-{{#each recipes}}
-- {{this}}
+{{{json recipes}}}
 ---
-{{/each}}
 
-Analyze the user's prompt to understand their requirements (e.g., number of days, dietary restrictions like 'vegetarian', 'healthy', 'quick').
-Select the most appropriate recipes from the provided list to create a structured meal plan.
-Ensure the output is a valid JSON object following the specified schema. Fill in as many days and meals as requested in the prompt. If the prompt does not specify a day, use standard days of the week like "Monday", "Tuesday", etc.
+Follow these steps:
+1. Analyze the user's prompt to understand their requirements (e.g., number of days, dietary restrictions like 'vegetarian', 'healthy', 'quick').
+2. Select the most appropriate recipes from the provided JSON list to create a structured meal plan. Fill in the 'plan' object.
+3. For every recipe you included in the plan, find its corresponding ingredients in the provided recipe list.
+4. Aggregate all ingredients from all selected recipes into a single flat array. Each string in the array should include the quantity and name (e.g., "1 cup Flour").
+5. Populate the 'ingredients' field in the output with this aggregated list.
+6. Ensure the final output is a valid JSON object following the specified schema.
 `,
 });
 
