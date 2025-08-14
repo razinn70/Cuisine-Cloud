@@ -30,8 +30,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { getRecipes } from "@/services/recipe";
-import { Recipe } from "@/types";
-import { generateMealPlan, MealPlan } from "@/ai/flows/meal-planner-flow";
+import { Recipe, MealPlan } from "@/types";
+import { generateMealPlan } from "@/ai/flows/meal-planner-flow";
 import {
   generateShoppingList,
   ShoppingListCategory,

@@ -6,28 +6,8 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
 import { Recipe } from '@/types';
-
-// Define the structure for a single day's meal plan
-const DayPlanSchema = z.object({
-  Breakfast: z.string().optional().describe("The name of the recipe for breakfast."),
-  Lunch: z.string().optional().describe("The name of the recipe for lunch."),
-  Dinner: z.string().optional().describe("The name of the recipe for dinner."),
-});
-
-// Define the overall meal plan structure using a record for flexible day names
-export const MealPlanSchema = z.object({
-  plan: z.record(z.string(), DayPlanSchema).describe("The generated meal plan, with days of the week as keys containing recipe names."),
-});
-export type MealPlan = z.infer<typeof MealPlanSchema>;
-
-
-const GenerateMealPlanInputSchema = z.object({
-  prompt: z.string().describe("The user's request for the meal plan (e.g., dietary needs, number of days)."),
-  recipes: z.array(z.custom<Pick<Recipe, 'title' | 'description'>>()).describe("A list of available recipes with their titles and descriptions."),
-});
-export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
+import { GenerateMealPlanInput, GenerateMealPlanInputSchema, MealPlan, MealPlanSchema } from '@/types';
 
 
 export async function generateMealPlan(input: GenerateMealPlanInput): Promise<MealPlan> {
