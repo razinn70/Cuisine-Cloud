@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { PT_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
@@ -26,6 +26,9 @@ export const metadata: Metadata = {
   description:
     'Discover, create, and share amazing recipes with the help of AI.',
   manifest: '/manifest.json',
+};
+
+export const viewport: Viewport = {
   themeColor: '#fde68a',
 };
 
