@@ -12,7 +12,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SmartRecipeToolInputSchema = z.object({
-  recipe: z.string().describe('The recipe to be modified.'),
+  recipe: z.string().optional().describe('The recipe to be modified, as text.'),
+  fileDataUri: z.string().optional().describe("An image or document of a recipe, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   dietaryRestrictions: z.string().describe('The dietary restrictions to consider when modifying the recipe.'),
 });
 export type SmartRecipeToolInput = z.infer<typeof SmartRecipeToolInputSchema>;
@@ -30,10 +31,24 @@ const prompt = ai.definePrompt({
   name: 'smartRecipeToolPrompt',
   input: {schema: SmartRecipeToolInputSchema},
   output: {schema: SmartRecipeToolOutputSchema},
-  prompt: `You are a recipe modification expert. Given the following recipe and dietary restrictions, provide a modified recipe with suggestions for substitutions or modifications.
+  prompt: `You are a recipe modification expert. You are adept at parsing recipes from various formats, including text, images, and documents.
 
-Recipe:
+Your task is to provide modification suggestions for the given recipe based on the user's dietary restrictions.
+
+Follow these steps:
+1.  Analyze the provided inputs. The recipe may be in the 'recipe' text field, the 'fileDataUri' field, or both.
+2.  If a file is provided in 'fileDataUri', perform OCR to extract the recipe text from it. This file could be a PNG, JPG, SVG, or PDF. Be as accurate as possible.
+3.  If text is provided in the 'recipe' field, use it as the primary source or as context to supplement the extracted text from the file.
+4.  Once you have the full recipe text, analyze the user's dietary restrictions.
+5.  Provide a modified version of the recipe, including specific ingredient substitutions and any necessary changes to the instructions.
+
+Recipe Text (if provided):
 {{recipe}}
+
+Recipe File (if provided):
+{{#if fileDataUri}}
+{{media url=fileDataUri}}
+{{/if}}
 
 Dietary Restrictions:
 {{dietaryRestrictions}}
@@ -48,6 +63,9 @@ const smartRecipeToolFlow = ai.defineFlow(
     outputSchema: SmartRecipeToolOutputSchema,
   },
   async input => {
+    if (!input.recipe && !input.fileDataUri) {
+        throw new Error('You must provide either recipe text or a recipe file.');
+    }
     const {output} = await prompt(input);
     return output!;
   }
