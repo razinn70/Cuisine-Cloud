@@ -17,8 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Sparkles, ChefHat } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { generateRecipe, GeneratedRecipe } from "@/ai/flows/generate-recipe-flow";
+import { generateRecipe } from "@/ai/flows/generate-recipe-flow";
 import { Separator } from "@/components/ui/separator";
+import { GeneratedRecipe } from "@/types";
 
 const formSchema = z.object({
   ingredients: z.string().min(5, "Please list at least one ingredient."),
