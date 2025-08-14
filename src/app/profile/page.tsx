@@ -55,7 +55,7 @@ export default function ProfilePage() {
          <Card className="mb-8">
           <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} data-ai-hint="person cooking" />
+              <AvatarImage src={user.photoURL ?? ''} alt={user.displayName ?? 'User'} />
               <AvatarFallback>{user.displayName?.charAt(0) ?? user.email?.charAt(0) ?? 'U'}</AvatarFallback>
             </Avatar>
             <div className="text-center sm:text-left">

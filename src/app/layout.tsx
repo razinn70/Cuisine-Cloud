@@ -6,6 +6,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import AppSidebar from '@/components/layout/AppSidebar';
 
 const ptSans = PT_Sans({
   subsets: ['latin'],
@@ -42,12 +44,17 @@ export default function RootLayout({
         )}
       >
         <AuthProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <Toaster />
+          <Sidebar>
+             <AppSidebar />
+            <SidebarInset>
+              <div className="relative flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <Toaster />
+            </SidebarInset>
+          </Sidebar>
         </AuthProvider>
       </body>
     </html>
