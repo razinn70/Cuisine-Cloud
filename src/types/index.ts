@@ -126,3 +126,15 @@ export const GenerateShoppingListInputSchema = z.object({
   ingredients: z.array(z.string()).describe("A flat list of ingredients, including quantities. e.g., ['1 cup Flour', '2 eggs']"),
 });
 export type GenerateShoppingListInput = z.infer<typeof GenerateShoppingListInputSchema>;
+
+
+// Schemas for Get Ingredients flow
+export const GetIngredientsInputSchema = z.object({
+  recipes: z.array(z.custom<Recipe>()).describe("A list of full recipe objects."),
+});
+export type GetIngredientsInput = z.infer<typeof GetIngredientsInputSchema>;
+
+export const GetIngredientsOutputSchema = z.object({
+  ingredients: z.array(z.string()).describe("A flat list of aggregated ingredients."),
+});
+export type GetIngredientsOutput = z.infer<typeof GetIngredientsOutputSchema>;
