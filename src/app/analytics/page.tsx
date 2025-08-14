@@ -31,7 +31,7 @@ export default function AnalyticsDashboardPage() {
     const fetchEvents = async () => {
       try {
         const fetchedEvents = await getEvents();
-        setEvents(fetchedEvents as AnalyticsEvent[]);
+        setEvents(fetchedEvents);
       } catch (error) {
         console.error("Failed to fetch analytics events", error);
       } finally {
@@ -71,7 +71,7 @@ export default function AnalyticsDashboardPage() {
           Analytics Dashboard
         </h1>
         <p className="text-lg text-muted-foreground">
-          Real-time event stream for key user actions.
+          Real-time event stream for key user actions (showing last 50 events).
         </p>
       </header>
 
