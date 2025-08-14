@@ -1,10 +1,7 @@
+
+'use server';
 import { Timestamp } from "firebase/firestore";
 import { z } from 'zod';
-
-export interface Ingredient {
-  name: string;
-  quantity: string;
-}
 
 // Zod schema for NutritionInfo
 export const NutritionInfoSchema = z.object({
@@ -15,6 +12,28 @@ export const NutritionInfoSchema = z.object({
 });
 export type NutritionInfo = z.infer<typeof NutritionInfoSchema>;
 
+// Main Recipe interface aligned with backend model
+export interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  cookTime: string; // For display, e.g., "45 minutes"
+  servings: string; // For display, e.g., "4 servings"
+  rating: number;
+  ingredients: Ingredient[];
+  instructions: string[];
+  nutrition: NutritionInfo;
+  author: string; // For display
+  authorId: string; // The ID of the author
+  createdAt?: Timestamp;
+}
+
+export interface Ingredient {
+  name: string;
+  quantity: string;
+}
+
 // Zod schema for AnalyzeRecipe flow
 export const AnalyzeRecipeInputSchema = z.object({
   title: z.string().describe("The title of the recipe."),
@@ -22,23 +41,6 @@ export const AnalyzeRecipeInputSchema = z.object({
   instructions: z.array(z.string()).describe("The cooking instructions."),
 });
 export type AnalyzeRecipeInput = z.infer<typeof AnalyzeRecipeInputSchema>;
-
-
-export interface Recipe {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  cookTime: string;
-  servings: string;
-  rating: number;
-  ingredients: Ingredient[];
-  instructions: string[];
-  nutrition: NutritionInfo;
-  author: string;
-  authorId: string;
-  createdAt?: Timestamp;
-}
 
 
 export interface AnalyticsEvent {

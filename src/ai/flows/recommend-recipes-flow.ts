@@ -3,9 +3,6 @@
 
 /**
  * @fileOverview Generates personalized recipe recommendations for a user.
- * This flow simulates the inference step of a recommendation model that has been trained
- * on user-recipe interaction data (e.g., ratings). The concept of "backward propagation"
- * and "training" happens offline, and this flow represents the model making predictions.
  */
 
 import { ai } from '@/ai/genkit';
@@ -17,44 +14,6 @@ import { sampleRatings } from '@/data/ratings';
 export async function recommendRecipes(input: RecommendRecipesInput): Promise<RecommendedRecipes> {
   return recommendRecipesFlow(input);
 }
-
-
-// This prompt simulates a trained recommendation model.
-// In a real system, the "training" (learning from user ratings via backpropagation) would
-// happen in a separate pipeline. This prompt uses the results of that implied training
-// (the user's past ratings) to make new predictions.
-const recommendationPrompt = ai.definePrompt({
-    name: "recommendationPrompt",
-    input: { schema: z.object({
-        recipes: z.array(z.custom<Pick<Recipe, 'id' | 'title' | 'description' | 'author'>>()),
-        userRatings: z.any(),
-        count: z.number(),
-    }) },
-    output: { schema: RecommendedRecipesSchema },
-    prompt: `You are a sophisticated AI recommendation engine for a recipe platform. Your goal is to provide personalized recipe suggestions.
-
-You have access to a catalog of all available recipes and the specific user's past ratings.
-
-Analyze the user's ratings to understand their preferences. Note which recipes they liked (high ratings) and which they disliked (low ratings).
-
-Based on this analysis, recommend {{count}} recipes from the catalog that the user has NOT rated yet.
-
-For each recommendation, provide a compelling, short reason explaining WHY they might like it, referencing their past ratings. For example, "Because you loved the 'Spicy Chicken Tacos', you might enjoy this flavorful 'Chili Lime Shrimp'."
-
-Available Recipes Catalog:
----
-{{{json recipes}}}
----
-
-User's Past Ratings (recipeId: rating):
----
-{{{json userRatings}}}
----
-
-Generate exactly {{count}} recommendations.
-`,
-});
-
 
 const recommendRecipesFlow = ai.defineFlow(
   {
@@ -80,6 +39,43 @@ const recommendRecipesFlow = ai.defineFlow(
       return { recommendations: [] };
     }
     
+    const recommendationPrompt = ai.definePrompt({
+        name: "recommendationPrompt",
+        input: { schema: z.object({
+            recipes: z.array(z.object({
+                id: z.string(),
+                title: z.string(),
+                description: z.string(),
+                author: z.string(),
+            })),
+            userRatings: z.any(),
+            count: z.number(),
+        }) },
+        output: { schema: RecommendedRecipesSchema },
+        prompt: `You are a sophisticated AI recommendation engine for a recipe platform. Your goal is to provide personalized recipe suggestions.
+
+You have access to a catalog of all available recipes and the specific user's past ratings.
+
+Analyze the user's ratings to understand their preferences. Note which recipes they liked (high ratings) and which they disliked (low ratings).
+
+Based on this analysis, recommend {{count}} recipes from the catalog that the user has NOT rated yet.
+
+For each recommendation, provide a compelling, short reason explaining WHY they might like it, referencing their past ratings. For example, "Because you loved the 'Spicy Chicken Tacos', you might enjoy this flavorful 'Chili Lime Shrimp'."
+
+Available Recipes Catalog:
+---
+{{{json recipes}}}
+---
+
+User's Past Ratings (recipeId: rating):
+---
+{{{json userRatings}}}
+---
+
+Generate exactly {{count}} recommendations.
+`,
+    });
+
     // 4. Call the AI model to get recommendations.
     // This is the "inference" step where the model makes predictions.
     const { output } = await recommendationPrompt({

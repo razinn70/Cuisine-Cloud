@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -24,7 +25,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, Upload, FileText } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { SmartRecipeToolInputSchema, SmartRecipeToolInput } from "@/types";
 import * as z from 'zod';
 
 const formSchema = z.object({
@@ -64,7 +64,7 @@ export default function SmartRecipeTool({ recipe }: SmartRecipeToolProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>>) => {
     setLoading(true);
     setResult(null);
     setError(null);

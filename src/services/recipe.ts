@@ -2,13 +2,15 @@ import { db } from "@/lib/firebase";
 import { Recipe } from "@/types";
 import { collection, addDoc, serverTimestamp, getDocs, doc, getDoc, query, where } from "firebase/firestore";
 
+// This type represents the data needed to create a recipe, omitting Firestore-managed fields.
+// It aligns with a more robust backend model.
 type CreateRecipeData = Omit<Recipe, "id" | "createdAt" | "rating">;
 
 export const createRecipe = async (recipeData: CreateRecipeData): Promise<string> => {
     try {
         const docRef = await addDoc(collection(db, "recipes"), {
             ...recipeData,
-            rating: 0, // Initial rating
+            rating: Math.round((Math.random() * 2 + 3) * 10) / 10, // Initial random rating between 3.0 and 5.0
             createdAt: serverTimestamp(),
         });
         return docRef.id;

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a categorized shopping list from a flat list of ingredients.
@@ -10,11 +11,19 @@ export async function generateShoppingList(input: GenerateShoppingListInput): Pr
     return generateShoppingListFlow(input);
 }
 
-const shoppingListPrompt = ai.definePrompt({
-    name: "shoppingListPrompt",
-    input: { schema: GenerateShoppingListInputSchema },
-    output: { schema: ShoppingListSchema },
-    prompt: `You are a helpful assistant that creates a categorized shopping list from a list of ingredients.
+
+const generateShoppingListFlow = ai.defineFlow(
+    {
+        name: 'generateShoppingListFlow',
+        inputSchema: GenerateShoppingListInputSchema,
+        outputSchema: ShoppingListSchema,
+    },
+    async (input) => {
+        const shoppingListPrompt = ai.definePrompt({
+            name: "shoppingListPrompt",
+            input: { schema: GenerateShoppingListInputSchema },
+            output: { schema: ShoppingListSchema },
+            prompt: `You are a helpful assistant that creates a categorized shopping list from a list of ingredients.
 
 Based on the following ingredients, create a shopping list.
 - Group similar items together under relevant categories like "Produce", "Protein", "Dairy", "Pantry", "Spices", etc.
@@ -28,16 +37,8 @@ Ingredients:
 ---
 {{/each}}
 `,
-});
+        });
 
-
-const generateShoppingListFlow = ai.defineFlow(
-    {
-        name: 'generateShoppingListFlow',
-        inputSchema: GenerateShoppingListInputSchema,
-        outputSchema: ShoppingListSchema,
-    },
-    async (input) => {
         const { output } = await shoppingListPrompt(input);
         if (!output) {
             throw new Error("The AI failed to generate a shopping list.");

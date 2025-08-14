@@ -5,24 +5,37 @@ import { Recipe, RecommendedRecipes } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { recommendRecipes } from "@/ai/flows/recommend-recipes-flow";
 import { getAuthenticatedUser } from "@/lib/auth";
+import { Suspense } from "react";
 
-async function Recommendations({ allRecipes }: { allRecipes: Recipe[] }) {
+async function Recommendations() {
   const user = await getAuthenticatedUser();
   
+  if (!user) {
+    return null;
+  }
+  
   let recommendations: RecommendedRecipes['recommendations'] = [];
-  if (user) {
-    try {
-      const result = await recommendRecipes({ userId: user.uid, count: 3 });
-      recommendations = result.recommendations;
-    } catch (error) {
-      console.error("Failed to fetch recommendations:", error);
-      // Fail gracefully
-      recommendations = [];
-    }
+  try {
+    const result = await recommendRecipes({ userId: user.uid, count: 3 });
+    recommendations = result.recommendations;
+  } catch (error) {
+    console.error("Failed to fetch recommendations:", error);
+    // Fail gracefully
+    return null;
   }
 
-  if (!user || recommendations.length === 0) {
+  if (recommendations.length === 0) {
     return null;
+  }
+
+  const recommendedRecipeDetails = await Promise.all(
+    recommendations.map(r => getRecipe(r.recipeId))
+  );
+
+  const validRecommendedRecipes = recommendedRecipeDetails.filter(Boolean) as Recipe[];
+
+  if(validRecommendedRecipes.length === 0) {
+      return null;
   }
   
   return (
@@ -32,16 +45,16 @@ async function Recommendations({ allRecipes }: { allRecipes: Recipe[] }) {
          Recommended for You
         </h2>
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-         {recommendations.map((rec) => {
-            const recipe = allRecipes.find(r => r.id === rec.recipeId);
-            return recipe ? (
-              <div key={rec.recipeId}>
+         {validRecommendedRecipes.map((recipe) => {
+            const rec = recommendations.find(r => r.recipeId === recipe.id);
+            return (
+              <div key={recipe.id}>
                   <RecipeCard recipe={recipe} />
                   <p className="text-sm text-muted-foreground mt-2 p-3 bg-background rounded-md border">
-                    <strong className="text-accent-foreground">AI Suggestion:</strong> {rec.reason}
+                    <strong className="text-accent-foreground">AI Suggestion:</strong> {rec?.reason}
                   </p>
               </div>
-            ) : null;
+            )
          })}
        </div>
     </section>
@@ -64,7 +77,16 @@ export default async function Home() {
         </p>
       </header>
 
-      <Recommendations allRecipes={recipes} />
+      <Suspense fallback={
+        <div className="mb-16">
+            <Skeleton className="h-10 w-1/3 mb-8" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array.from({length: 3}).map((_, i) => <Skeleton key={i} className="h-[350px] w-full rounded-xl" />)}
+            </div>
+        </div>
+      }>
+        <Recommendations />
+      </Suspense>
       
       <section>
         <h2 className="text-3xl font-headline mb-8 flex items-center gap-3">

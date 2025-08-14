@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -13,12 +14,18 @@ export async function generateMealPlan(input: GenerateMealPlanInput): Promise<Me
   return generateMealPlanFlow(input);
 }
 
-
-const prompt = ai.definePrompt({
-    name: "mealPlannerPrompt",
-    input: { schema: GenerateMealPlanInputSchema },
-    output: { schema: MealPlanSchema },
-    prompt: `You are an expert meal planner. Your task is to generate a meal plan based on the user's prompt and the list of available recipes.
+const generateMealPlanFlow = ai.defineFlow(
+  {
+    name: 'generateMealPlanFlow',
+    inputSchema: GenerateMealPlanInputSchema,
+    outputSchema: MealPlanSchema,
+  },
+  async (input) => {
+    const prompt = ai.definePrompt({
+        name: "mealPlannerPrompt",
+        input: { schema: GenerateMealPlanInputSchema },
+        output: { schema: MealPlanSchema },
+        prompt: `You are an expert meal planner. Your task is to generate a meal plan based on the user's prompt and the list of available recipes.
 
 User Prompt:
 "{{prompt}}"
@@ -34,15 +41,8 @@ Follow these steps:
 3. Fill in the 'plan' object with the chosen recipe titles. Do not include any other information.
 4. Ensure the final output is a valid JSON object following the specified schema.
 `,
-});
-
-const generateMealPlanFlow = ai.defineFlow(
-  {
-    name: 'generateMealPlanFlow',
-    inputSchema: GenerateMealPlanInputSchema,
-    outputSchema: MealPlanSchema,
-  },
-  async (input) => {
+    });
+    
     const { output } = await prompt(input);
     if (!output) {
       throw new Error("The AI failed to generate a meal plan.");

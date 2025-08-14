@@ -1,11 +1,10 @@
+
 'use server';
 
 /**
  * @fileOverview Provides AI-powered recipe modification and substitution suggestions based on dietary restrictions.
  *
  * - smartRecipeTool - A function that takes a recipe and dietary restrictions and suggests modifications.
- * - SmartRecipeToolInput - The input type for the smartRecipeTool function.
- * - SmartRecipeToolOutput - The return type for the smartRecipeTool function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -16,11 +15,19 @@ export async function smartRecipeTool(input: SmartRecipeToolInput): Promise<Smar
   return smartRecipeToolFlow(input);
 }
 
-const prompt = ai.definePrompt({
-  name: 'smartRecipeToolPrompt',
-  input: {schema: SmartRecipeToolInputSchema},
-  output: {schema: SmartRecipeToolOutputSchema},
-  prompt: `You are a recipe modification expert. You are adept at parsing recipes from various formats, including text, images, and documents.
+
+const smartRecipeToolFlow = ai.defineFlow(
+  {
+    name: 'smartRecipeToolFlow',
+    inputSchema: SmartRecipeToolInputSchema,
+    outputSchema: SmartRecipeToolOutputSchema,
+  },
+  async input => {
+    const prompt = ai.definePrompt({
+      name: 'smartRecipeToolPrompt',
+      input: {schema: SmartRecipeToolInputSchema},
+      output: {schema: SmartRecipeToolOutputSchema},
+      prompt: `You are a recipe modification expert. You are adept at parsing recipes from various formats, including text, images, and documents.
 
 Your task is to provide modification suggestions for the given recipe based on the user's dietary restrictions.
 
@@ -43,15 +50,8 @@ Dietary Restrictions:
 {{dietaryRestrictions}}
 
 Modified Recipe:`, 
-});
+    });
 
-const smartRecipeToolFlow = ai.defineFlow(
-  {
-    name: 'smartRecipeToolFlow',
-    inputSchema: SmartRecipeToolInputSchema,
-    outputSchema: SmartRecipeToolOutputSchema,
-  },
-  async input => {
     if (!input.recipe && !input.fileDataUri) {
         throw new Error('You must provide either recipe text or a recipe file.');
     }

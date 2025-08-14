@@ -82,10 +82,10 @@ export default function CreateRecipePage() {
         cookTime: values.cookTime,
         servings: values.servings,
         ingredients: ingredientsList.map(line => {
-            const parts = line.split(' ');
-            const quantity = parts[0];
-            const name = parts.slice(1).join(' ');
-            return { name: name || line, quantity: name ? quantity : '' };
+            const parts = line.match(/^([0-9/.\s]+)?\s*(.*)/) || [];
+            const quantity = parts[1]?.trim() || '';
+            const name = parts[2]?.trim() || line;
+            return { name, quantity };
         }),
         instructions: instructionsList,
         imageUrl: 'https://placehold.co/600x400.png',
@@ -256,7 +256,7 @@ export default function CreateRecipePage() {
 
               <Button type="submit" size="lg" disabled={isLoading}>
                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Analyzing Nutrition...' : 'Create Recipe'}
+                {isLoading ? 'Analyzing & Saving...' : 'Create Recipe'}
               </Button>
             </form>
           </Form>

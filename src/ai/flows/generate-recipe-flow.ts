@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a new recipe from a list of ingredients and user preferences.
@@ -11,13 +12,21 @@ export async function generateRecipe(input: GenerateRecipeInput): Promise<Genera
     return generateRecipeFlow(input);
 }
 
-// This prompt is now focused only on generating the creative parts of the recipe.
-const creativePrompt = ai.definePrompt({
-    name: 'generateCreativeRecipePrompt',
-    input: { schema: GenerateRecipeInputSchema },
-    // The output is now just the core recipe, without nutrition.
-    output: { schema: GeneratedRecipeSchema.omit({ nutrition: true }) },
-    prompt: `You are an expert chef who can create amazing recipes from a limited set of ingredients.
+// This prompt is now defined within the flow to avoid exporting it.
+const generateRecipeFlow = ai.defineFlow(
+  {
+    name: 'generateRecipeFlow',
+    inputSchema: GenerateRecipeInputSchema,
+    outputSchema: GeneratedRecipeSchema,
+  },
+  async (input) => {
+
+    const creativePrompt = ai.definePrompt({
+        name: 'generateCreativeRecipePrompt',
+        input: { schema: GenerateRecipeInputSchema },
+        // The output is now just the core recipe, without nutrition.
+        output: { schema: GeneratedRecipeSchema.omit({ nutrition: true }) },
+        prompt: `You are an expert chef who can create amazing recipes from a limited set of ingredients.
 A user has the following ingredients available:
 ---
 {{ingredients}}
@@ -32,16 +41,8 @@ Your task is to generate a complete, delicious, and easy-to-follow recipe based 
 
 Generate the recipe in the specified JSON format. Do NOT include the 'nutrition' field.
 `,
-});
+    });
 
-
-const generateRecipeFlow = ai.defineFlow(
-  {
-    name: 'generateRecipeFlow',
-    inputSchema: GenerateRecipeInputSchema,
-    outputSchema: GeneratedRecipeSchema,
-  },
-  async (input) => {
     // Step 1: Generate the creative recipe content (ingredients, instructions, etc.)
     const { output: creativeOutput } = await creativePrompt(input);
     if (!creativeOutput) {

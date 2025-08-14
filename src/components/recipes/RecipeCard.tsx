@@ -7,6 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Clock, Star, Users, Heart } from "lucide-react";
 import type { Recipe } from "@/types";
+import { Button } from "../ui/button";
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -24,6 +25,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
             data-ai-hint="recipe food"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
           
@@ -44,7 +46,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         </div>
 
         {/* Bottom section with Quick Stats */}
-        <CardContent className="p-4 flex justify-between text-sm text-muted-foreground">
+        <CardContent className="p-4 flex justify-between text-sm text-muted-foreground bg-card">
           <div className="flex items-center gap-2" title="Cook time">
             <Clock className="w-4 h-4" />
             <span>{recipe.cookTime}</span>
@@ -55,7 +57,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
           </div>
           <div className="flex items-center gap-2" title={`${recipe.rating} stars`}>
             <Star className="w-4 h-4 text-primary fill-primary" />
-            <span className="font-semibold">{recipe.rating}</span>
+            <span className="font-semibold">{recipe.rating?.toFixed(1) || 'N/A'}</span>
           </div>
         </CardContent>
       </Card>
