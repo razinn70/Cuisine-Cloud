@@ -8,6 +8,7 @@ import {
   signOut,
   updateProfile,
   User,
+  UserCredential,
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Loader2 } from 'lucide-react';
@@ -39,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, { displayName });
     // Manually set user after profile update to reflect changes immediately
-    setUser(auth.currentUser);
+    setUser({ ...userCredential.user, displayName });
     return userCredential;
   };
   
