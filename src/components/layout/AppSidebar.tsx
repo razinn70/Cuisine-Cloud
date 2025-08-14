@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -29,13 +30,14 @@ export default function AppSidebar() {
 
   return (
     <>
-      <SidebarHeader>
+      <SidebarHeader className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ChefHat className="w-6 h-6 text-primary" />
           <span className="font-bold font-headline text-lg group-data-[collapsible=icon]:hidden">
             Cuisine Cloud
           </span>
         </div>
+         <SidebarTrigger className="group-data-[mobile=true]:hidden" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
