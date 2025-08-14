@@ -34,9 +34,6 @@ export default function AppSidebar() {
             Cuisine Cloud
           </span>
         </div>
-        <div className="ml-auto">
-          <SidebarTrigger />
-        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
