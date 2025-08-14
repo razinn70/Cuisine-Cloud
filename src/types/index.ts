@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export interface Ingredient {
   name: string;
   quantity: string;
@@ -22,4 +24,6 @@ export interface Recipe {
   instructions: string[];
   nutrition: NutritionInfo;
   author: string;
+  authorId: string;
+  createdAt: Timestamp;
 }

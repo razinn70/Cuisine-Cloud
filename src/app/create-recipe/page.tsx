@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,7 +17,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { createRecipe } from "@/services/recipe";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const recipeFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters."),
@@ -28,6 +34,11 @@ const recipeFormSchema = z.object({
 });
 
 export default function CreateRecipePage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof recipeFormSchema>>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
@@ -40,11 +51,64 @@ export default function CreateRecipePage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof recipeFormSchema>) {
-    console.log(values);
-    // Here you would typically send the data to your backend
-    alert("Recipe submitted! (Check console for data)");
+  async function onSubmit(values: z.infer<typeof recipeFormSchema>) {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: "You must be logged in to create a recipe.",
+      });
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+      const newRecipe = {
+        title: values.title,
+        description: values.description,
+        cookTime: values.cookTime,
+        servings: values.servings,
+        ingredients: values.ingredients.split('\n').map(line => ({ name: line, quantity: '' })), // Basic parsing
+        instructions: values.instructions.split('\n'), // Basic parsing
+        imageUrl: 'https://placehold.co/600x400.png', // Placeholder for now
+        nutrition: { calories: 'N/A', protein: 'N/A', carbs: 'N/A', fat: 'N/A' }, // Placeholder
+        author: user.displayName || "Anonymous",
+        authorId: user.uid,
+      };
+      
+      const recipeId = await createRecipe(newRecipe);
+
+      toast({
+        title: "Recipe Created!",
+        description: "Your delicious recipe has been saved.",
+      });
+      
+      router.push(`/recipe/${recipeId}`);
+
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create the recipe. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }
+  
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-headline mb-4">Please Log In</h1>
+        <p className="text-muted-foreground mb-6">You need to be logged in to create a recipe.</p>
+        <Button asChild>
+          <Link href="/login">Log In</Link>
+        </Button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -170,7 +234,10 @@ export default function CreateRecipePage() {
                 )}
               />
 
-              <Button type="submit" size="lg">Create Recipe</Button>
+              <Button type="submit" size="lg" disabled={isLoading}>
+                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Recipe
+              </Button>
             </form>
           </Form>
         </CardContent>
