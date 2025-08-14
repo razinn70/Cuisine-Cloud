@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Sidebar,
   SidebarContent,
   SidebarHeader,
   SidebarMenu,
@@ -25,7 +24,7 @@ export default function AppSidebar() {
   const { user } = useAuth();
 
   return (
-    <Sidebar>
+    <>
       <SidebarHeader>
         <div className="flex items-center gap-2">
           <ChefHat className="w-6 h-6 text-primary" />
@@ -57,6 +56,6 @@ export default function AppSidebar() {
           })}
         </SidebarMenu>
       </SidebarContent>
-    </Sidebar>
+    </>
   );
 }

@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/components/auth/AuthProvider';
-import { Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { Sidebar, SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
 
 const ptSans = PT_Sans({
@@ -42,10 +42,13 @@ export default function RootLayout({
           ptSans.variable,
           playfairDisplay.variable
         )}
+        suppressHydrationWarning
       >
         <AuthProvider>
-          <Sidebar>
-             <AppSidebar />
+          <SidebarProvider>
+            <Sidebar>
+              <AppSidebar />
+            </Sidebar>
             <SidebarInset>
               <div className="relative flex min-h-screen flex-col">
                 <Header />
@@ -54,7 +57,7 @@ export default function RootLayout({
               </div>
               <Toaster />
             </SidebarInset>
-          </Sidebar>
+          </SidebarProvider>
         </AuthProvider>
       </body>
     </html>
