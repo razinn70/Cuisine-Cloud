@@ -65,11 +65,14 @@ export default function CreateRecipePage() {
     setIsLoading(true);
 
     try {
+      const ingredientsList = values.ingredients.split('\n').filter(line => line.trim() !== '');
+      const instructionsList = values.instructions.split('\n').filter(line => line.trim() !== '');
+
       // Step 1: Analyze the recipe to get nutritional information.
       const nutrition = await analyzeRecipe({
         title: values.title,
-        ingredients: values.ingredients.split('\n'),
-        instructions: values.instructions.split('\n'),
+        ingredients: ingredientsList,
+        instructions: instructionsList,
       });
 
       // Step 2: Create the recipe object with the analyzed data.
@@ -78,12 +81,13 @@ export default function CreateRecipePage() {
         description: values.description,
         cookTime: values.cookTime,
         servings: values.servings,
-        ingredients: values.ingredients.split('\n').map(line => {
-            const [quantity, ...nameParts] = line.split(' ');
-            const name = nameParts.join(' ');
+        ingredients: ingredientsList.map(line => {
+            const parts = line.split(' ');
+            const quantity = parts[0];
+            const name = parts.slice(1).join(' ');
             return { name: name || line, quantity: name ? quantity : '' };
         }),
-        instructions: values.instructions.split('\n'),
+        instructions: instructionsList,
         imageUrl: 'https://placehold.co/600x400.png',
         nutrition: nutrition, 
         author: user.displayName || "Anonymous",

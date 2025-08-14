@@ -106,6 +106,7 @@ export default function MealPlannerPage() {
           title: "Meal Plan",
           description: "No recipes were found for your request.",
         });
+        setGenerating(false);
         return;
       }
       
@@ -250,7 +251,7 @@ export default function MealPlannerPage() {
                             className="p-3 border-l min-h-[100px] flex flex-col justify-center hover:bg-secondary/50 transition-colors"
                           >
                             {plannedMeal ? (
-                              <div className="text-sm bg-primary/20 text-primary-foreground p-2 rounded-md">
+                              <div className="text-sm bg-primary/20 text-accent p-2 rounded-md">
                                 {plannedMeal}
                               </div>
                             ) : (
@@ -281,7 +282,7 @@ export default function MealPlannerPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {generating && (
+                {generating && shoppingList.length === 0 && (
                   <div className="flex items-center justify-center p-8">
                     <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
                   </div>
