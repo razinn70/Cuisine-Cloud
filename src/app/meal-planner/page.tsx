@@ -1,110 +1,286 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, Download, PlusCircle } from "lucide-react";
+import {
+  Calendar,
+  Download,
+  PlusCircle,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useState } from "react";
+import { getRecipes } from "@/services/recipe";
+import { Recipe } from "@/types";
+import { generateMealPlan, MealPlan } from "@/ai/flows/meal-planner-flow";
+import {
+  generateShoppingList,
+  ShoppingListCategory,
+} from "@/ai/flows/shopping-list-flow";
+import { useToast } from "@/hooks/use-toast";
 
-const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const formSchema = z.object({
+  prompt: z
+    .string()
+    .min(10, "Please describe your meal plan needs in a bit more detail.")
+    .max(200, "Please keep your request under 200 characters."),
+});
+
+const daysOfWeek = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 const mealTypes = ["Breakfast", "Lunch", "Dinner"];
 
-const plannedMeals = {
-  Monday: {
-    Breakfast: "Oatmeal with Berries",
-    Lunch: "Leftover Lentil Soup",
-    Dinner: "Lemon Herb Baked Salmon",
-  },
-  Wednesday: {
-    Dinner: "Spicy Thai Green Curry",
-  },
-  Friday: {
-    Dinner: "Classic Tomato Bruschetta",
-  },
-};
-
-const shoppingList = [
-  { category: "Produce", items: ["Tomatoes", "Basil", "Garlic", "Lemon", "Onion"] },
-  { category: "Dairy", items: ["Parmesan Cheese"] },
-  { category: "Pantry", items: ["Baguette", "Olive Oil", "Lentils", "Vegetable Broth"] },
-  { category: "Protein", items: ["Salmon Fillets"] },
-];
-
 export default function MealPlannerPage() {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [shoppingList, setShoppingList] = useState<ShoppingListCategory[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        const fetchedRecipes = await getRecipes();
+        setRecipes(fetchedRecipes);
+      } catch (error) {
+        console.error("Failed to fetch recipes", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Could not fetch recipes for meal planning.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecipes();
+  }, [toast]);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      prompt: "Generate a 3-day healthy meal plan for one person.",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setGenerating(true);
+    setMealPlan(null);
+    setShoppingList([]);
+
+    try {
+      const generatedPlan = await generateMealPlan({
+        prompt: values.prompt,
+        recipes: recipes.map(
+          (r) =>
+            `Title: ${r.title}, Description: ${
+              r.description
+            }, Ingredients: ${r.ingredients
+              .map((i) => `${i.quantity} ${i.name}`)
+              .join(", ")}`
+        ),
+      });
+      setMealPlan(generatedPlan);
+
+      const generatedShoppingList = await generateShoppingList({
+        mealPlan: generatedPlan,
+        recipes,
+      });
+      setShoppingList(generatedShoppingList.shoppingList);
+    } catch (error) {
+      console.error("Failed to generate meal plan:", error);
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description:
+          "There was an error generating your meal plan. Please try again.",
+      });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="mb-8">
         <h1 className="text-4xl font-headline text-accent mb-2 flex items-center gap-3">
-          <Calendar className="w-8 h-8"/>
-          Your Weekly Meal Plan
+          <Calendar className="w-8 h-8" />
+          AI-Powered Meal Planner
         </h1>
         <p className="text-lg text-muted-foreground">
-          Organize your meals for the week and automatically generate a shopping list.
+          Describe your ideal week of meals, and let our AI handle the rest.
         </p>
       </header>
-      
+
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2">
-            <Card>
-                <CardContent className="p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-4">
-                    <div className="hidden sm:block"></div>
-                    {mealTypes.map(meal => (
-                        <div key={meal} className="text-center font-bold font-headline p-2 text-muted-foreground">{meal}</div>
-                    ))}
-                </div>
-                <Separator/>
-                <div className="grid grid-cols-1">
-                    {daysOfWeek.map(day => (
-                    <div key={day} className="grid grid-cols-1 sm:grid-cols-4 border-b last:border-b-0">
-                        <div className="font-bold p-3 bg-secondary sm:bg-transparent rounded-t-lg sm:rounded-none">{day}</div>
-                        {mealTypes.map(meal => {
-                            // @ts-ignore
-                            const plannedMeal = plannedMeals[day]?.[meal];
-                            return (
-                                <div key={`${day}-${meal}`} className="p-3 border-l min-h-[100px] flex flex-col justify-between hover:bg-secondary/50 transition-colors">
-                                {plannedMeal ? (
-                                    <div className="text-sm bg-primary/20 text-primary-foreground p-2 rounded-md">
-                                        {plannedMeal}
-                                    </div>
-                                ) : (
-                                    <button className="w-full h-full flex items-center justify-center text-muted-foreground hover:text-primary">
-                                        <PlusCircle className="w-5 h-5"/>
-                                    </button>
-                                )}
-                                </div>
-                            );
-                        })}
+        <div className="lg:col-span-2 space-y-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" /> Tell us what you
+                need
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
+                  <FormField
+                    control={form.control}
+                    name="prompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Meal Plan Request</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="e.g., A 5-day vegetarian plan with quick breakfast options."
+                            rows={3}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={loading || generating}
+                    className="w-full"
+                  >
+                    {generating ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="mr-2 h-4 w-4" />
+                    )}
+                    Generate Plan
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-1 sm:grid-cols-4">
+                <div className="hidden sm:block"></div>
+                {mealTypes.map((meal) => (
+                  <div
+                    key={meal}
+                    className="text-center font-bold font-headline p-2 text-muted-foreground"
+                  >
+                    {meal}
+                  </div>
+                ))}
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1">
+                {daysOfWeek.map((day) => (
+                  <div
+                    key={day}
+                    className="grid grid-cols-1 sm:grid-cols-4 border-b last:border-b-0"
+                  >
+                    <div className="font-bold p-3 bg-secondary sm:bg-transparent rounded-t-lg sm:rounded-none">
+                      {day}
                     </div>
-                    ))}
-                </div>
-                </CardContent>
-            </Card>
+                    {mealTypes.map((meal) => {
+                      const plannedMeal = (mealPlan?.plan as any)?.[day]?.[
+                        meal
+                      ];
+                      return (
+                        <div
+                          key={`${day}-${meal}`}
+                          className="p-3 border-l min-h-[100px] flex flex-col justify-center hover:bg-secondary/50 transition-colors"
+                        >
+                          {plannedMeal ? (
+                            <div className="text-sm bg-primary/20 text-primary-foreground p-2 rounded-md">
+                              {plannedMeal}
+                            </div>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                              -
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
         <aside>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="font-headline text-2xl">Shopping List</CardTitle>
-              <Button variant="outline" size="icon">
+              <CardTitle className="font-headline text-2xl">
+                Shopping List
+              </CardTitle>
+              <Button variant="outline" size="icon" disabled={shoppingList.length === 0}>
                 <Download className="w-4 h-4" />
                 <span className="sr-only">Download List</span>
               </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {shoppingList.map(category => (
-                  <div key={category.category}>
-                    <h3 className="font-semibold text-accent mb-2">{category.category}</h3>
-                    <ul className="space-y-2">
-                      {category.items.map(item => (
-                        <li key={item} className="flex items-center">
-                          <Checkbox id={item} className="mr-2"/>
-                          <label htmlFor={item} className="text-sm peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            {item}
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
+                {generating && (
+                  <div className="flex items-center justify-center p-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground"/>
                   </div>
-                ))}
+                )}
+                {shoppingList.length > 0 ? (
+                  shoppingList.map((category) => (
+                    <div key={category.category}>
+                      <h3 className="font-semibold text-accent mb-2">
+                        {category.category}
+                      </h3>
+                      <ul className="space-y-2">
+                        {category.items.map((item) => (
+                          <li key={item} className="flex items-center">
+                            <Checkbox id={item} className="mr-2" />
+                            <label
+                              htmlFor={item}
+                              className="text-sm peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {item}
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))
+                ) : !generating && (
+                   <div className="text-center text-sm text-muted-foreground py-8">
+                    Your shopping list will appear here once you generate a meal plan.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
