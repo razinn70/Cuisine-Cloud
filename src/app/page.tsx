@@ -1,41 +1,27 @@
-
-"use client";
-
 import RecipeCard from "@/components/recipes/RecipeCard";
-import { Loader2, Utensils } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Utensils, Wand2 } from "lucide-react";
 import { getRecipes } from "@/services/recipe";
 import { Recipe, RecommendedRecipes } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { recommendRecipes } from "@/ai/flows/recommend-recipes-flow";
-import Link from "next/link";
-import { Wand2 } from "lucide-react";
+import { getAuthenticatedUser } from "@/lib/auth";
 
-function Recommendations({ user, allRecipes }: { user: any; allRecipes: Recipe[] }) {
-  const [recommendations, setRecommendations] = useState<RecommendedRecipes['recommendations']>([]);
-  const [loadingRecs, setLoadingRecs] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      const fetchRecommendations = async () => {
-        setLoadingRecs(true);
-        try {
-          const result = await recommendRecipes({ userId: user.uid, count: 4 });
-          setRecommendations(result.recommendations);
-        } catch (error) {
-          console.error("Failed to fetch recommendations:", error);
-        } finally {
-          setLoadingRecs(false);
-        }
-      };
-      fetchRecommendations();
-    } else {
-      setLoadingRecs(false);
+async function Recommendations({ allRecipes }: { allRecipes: Recipe[] }) {
+  const user = await getAuthenticatedUser();
+  
+  let recommendations: RecommendedRecipes['recommendations'] = [];
+  if (user) {
+    try {
+      const result = await recommendRecipes({ userId: user.uid, count: 3 });
+      recommendations = result.recommendations;
+    } catch (error) {
+      console.error("Failed to fetch recommendations:", error);
+      // Fail gracefully
+      recommendations = [];
     }
-  }, [user]);
+  }
 
-  if (!user || (!loadingRecs && recommendations.length === 0)) {
+  if (!user || recommendations.length === 0) {
     return null;
   }
   
@@ -45,57 +31,26 @@ function Recommendations({ user, allRecipes }: { user: any; allRecipes: Recipe[]
          <Wand2 className="w-7 h-7 text-primary" />
          Recommended for You
         </h2>
-       {loadingRecs ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex flex-col space-y-3">
-                <Skeleton className="h-[220px] w-full rounded-xl" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-4/5" />
-                </div>
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+         {recommendations.map((rec) => {
+            const recipe = allRecipes.find(r => r.id === rec.recipeId);
+            return recipe ? (
+              <div key={rec.recipeId}>
+                  <RecipeCard recipe={recipe} />
+                  <p className="text-sm text-muted-foreground mt-2 p-3 bg-background rounded-md border">
+                    <strong className="text-accent-foreground">AI Suggestion:</strong> {rec.reason}
+                  </p>
               </div>
-            ))}
-          </div>
-       ) : (
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-           {recommendations.map((rec) => {
-              const recipe = allRecipes.find(r => r.id === rec.recipeId);
-              return recipe ? (
-                <div key={rec.recipeId}>
-                    <RecipeCard recipe={recipe} />
-                    <p className="text-sm text-muted-foreground mt-2 p-3 bg-background rounded-md border">
-                      <strong className="text-accent-foreground">AI Suggestion:</strong> {rec.reason}
-                    </p>
-                </div>
-              ) : null;
-           })}
-         </div>
-       )}
+            ) : null;
+         })}
+       </div>
     </section>
   );
 }
 
 
-export default function Home() {
-  const { user } = useAuth();
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  useEffect(() => {
-    const fetchAllRecipes = async () => {
-      try {
-        const fetchedRecipes = await getRecipes();
-        setRecipes(fetchedRecipes);
-      } catch (error) {
-        console.error("Failed to fetch recipes", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllRecipes();
-  }, []);
-
+export default async function Home() {
+  const recipes = await getRecipes();
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -109,27 +64,15 @@ export default function Home() {
         </p>
       </header>
 
-      <Recommendations user={user} allRecipes={recipes} />
+      <Recommendations allRecipes={recipes} />
       
       <section>
         <h2 className="text-3xl font-headline mb-8 flex items-center gap-3">
           <Utensils className="w-7 h-7 text-primary" />
           Featured Recipes
         </h2>
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {Array.from({ length: 8 }).map((_, i) => (
-               <div key={i} className="flex flex-col space-y-3">
-                <Skeleton className="h-[220px] w-full rounded-xl" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-4/5" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : recipes.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {recipes.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {recipes.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}

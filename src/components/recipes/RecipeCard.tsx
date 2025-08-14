@@ -3,12 +3,9 @@ import Image from "next/image";
 import {
   Card,
   CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Star, Users } from "lucide-react";
+import { Clock, Star, Users, Heart } from "lucide-react";
 import type { Recipe } from "@/types";
 
 interface RecipeCardProps {
@@ -17,43 +14,50 @@ interface RecipeCardProps {
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
   return (
-    <Link href={`/recipe/${recipe.id}`} className="group">
-      <Card className="flex flex-col h-full overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1 border-2 border-transparent group-hover:border-primary/80">
-        <CardHeader className="p-0">
-          <div className="relative aspect-video">
-            <Image
-              src={recipe.imageUrl}
-              alt={recipe.title}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-              data-ai-hint="recipe food"
-            />
-             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0"></div>
-             <Badge className="absolute top-2 right-2">{recipe.author}</Badge>
+    <Link href={`/recipe/${recipe.id}`} className="group block">
+      <Card className="flex flex-col h-full overflow-hidden rounded-xl shadow-md transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1 group-hover:scale-[1.02] border">
+        {/* Top section with Hero Image */}
+        <div className="relative aspect-video">
+          <Image
+            src={recipe.imageUrl}
+            alt={recipe.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            data-ai-hint="recipe food"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
+          
+          {/* Interactive and Info Elements Overlaid on Image */}
+          <div className="absolute top-3 left-3">
+             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
+                <Heart className="w-4 h-4" />
+             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="p-4 flex-grow">
-          <CardTitle className="font-headline text-lg leading-tight mb-2 group-hover:text-primary transition-colors">
-            {recipe.title}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {recipe.description}
-          </p>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 flex justify-between text-sm text-muted-foreground border-t mx-4">
-          <div className="flex items-center gap-1 pt-4">
+           
+          <Badge className="absolute top-3 right-3 bg-primary/80 backdrop-blur-sm border-primary/50 text-primary-foreground">{recipe.author}</Badge>
+
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <h3 className="font-headline text-lg font-bold text-white leading-tight drop-shadow-md">
+                {recipe.title}
+            </h3>
+          </div>
+        </div>
+
+        {/* Bottom section with Quick Stats */}
+        <CardContent className="p-4 flex justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-2" title="Cook time">
             <Clock className="w-4 h-4" />
             <span>{recipe.cookTime}</span>
           </div>
-          <div className="flex items-center gap-1 pt-4">
+          <div className="flex items-center gap-2" title="Servings">
             <Users className="w-4 h-4" />
             <span>{recipe.servings}</span>
           </div>
-          <div className="flex items-center gap-1 pt-4">
-            <Star className="w-4 h-4 text-primary" />
+          <div className="flex items-center gap-2" title={`${recipe.rating} stars`}>
+            <Star className="w-4 h-4 text-primary fill-primary" />
             <span className="font-semibold">{recipe.rating}</span>
           </div>
-        </CardFooter>
+        </CardContent>
       </Card>
     </Link>
   );
