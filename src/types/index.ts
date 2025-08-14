@@ -1,43 +1,142 @@
-import { Timestamp } from "firebase/firestore";
+import { Timestamp } from 'firebase/firestore';
 import { z } from 'zod';
 
-// Zod schema for NutritionInfo
+// =================================================================
+// ENUMS & CONSTANTS
+// =================================================================
+
+export enum RecipeDifficulty {
+  Beginner = 'Beginner',
+  Intermediate = 'Intermediate',
+  Advanced = 'Advanced',
+}
+
+export enum CuisineType {
+  Italian = 'Italian',
+  Mexican = 'Mexican',
+  Japanese = 'Japanese',
+  Indian = 'Indian',
+  French = 'French',
+  Chinese = 'Chinese',
+  Thai = 'Thai',
+  Spanish = 'Spanish',
+  American = 'American',
+  Other = 'Other',
+}
+
+// =================================================================
+// CORE DATA MODELS
+// =================================================================
+
 export const NutritionInfoSchema = z.object({
-  calories: z.string().describe("Estimated calories per serving."),
-  protein: z.string().describe("Estimated protein in grams per serving."),
-  carbs: z.string().describe("Estimated carbohydrates in grams per serving."),
-  fat: z.string().describe("Estimated fat in grams per serving."),
+  calories: z.number().positive().optional(),
+  protein: z.number().positive().optional(),
+  carbs: z.number().positive().optional(),
+  fat: z.number().positive().optional(),
+  fiber: z.number().positive().optional(),
+  sugar: z.number().positive().optional(),
+  sodium: z.number().positive().optional(),
 });
 export type NutritionInfo = z.infer<typeof NutritionInfoSchema>;
 
 export const IngredientSchema = z.object({
+  id: z.string().uuid(),
   name: z.string(),
-  quantity: z.string(),
+  quantity: z.number().positive(),
+  unit: z.string(),
+  preparationNotes: z.string().optional(),
+  nutritionData: NutritionInfoSchema.optional(),
 });
 export type Ingredient = z.infer<typeof IngredientSchema>;
 
-// Main Recipe interface aligned with backend model
 export const RecipeSchema = z.object({
   id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  imageUrl: z.string(),
-  cookTime: z.string(), // For display, e.g., "45 minutes"
-  servings: z.string(), // For display, e.g., "4 servings"
-  rating: z.number(),
+  authorId: z.string(),
+  title: z.string().min(3),
+  description: z.string().min(10),
+  difficulty: z.nativeEnum(RecipeDifficulty),
+  cuisine: z.nativeEnum(CuisineType).optional(),
+  prepTimeMinutes: z.number().int().positive(),
+  cookTimeMinutes: z.number().int().positive(),
+  servings: z.number().int().positive(),
+  tags: z.array(z.string()).optional(),
   ingredients: z.array(IngredientSchema),
   instructions: z.array(z.string()),
   nutrition: NutritionInfoSchema,
-  author: z.string(), // For display
-  authorId: z.string(), // The ID of the author
-  difficulty: z.enum(['Beginner', 'Intermediate', 'Advanced']).optional(),
-  tags: z.array(z.string()).optional(),
-  createdAt: z.custom<Timestamp>().optional(),
+  imageUrl: z.string().url().optional(),
+  createdAt: z.custom<Timestamp>(),
+  updatedAt: z.custom<Timestamp>(),
+  rating: z.number().min(0).max(5).default(0),
 });
-
 export type Recipe = z.infer<typeof RecipeSchema>;
 
-// Zod schema for AnalyzeRecipe flow
+export const UserProfileSchema = z.object({
+  uid: z.string(),
+  displayName: z.string().optional(),
+  email: z.string().email(),
+  photoURL: z.string().url().optional(),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  healthGoals: z.array(z.string()).optional(),
+});
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
+// =================================================================
+// ENRICHED & WRAPPER TYPES
+// =================================================================
+
+export const RecipeWithAuthorSchema = RecipeSchema.extend({
+  author: UserProfileSchema.pick({
+    uid: true,
+    displayName: true,
+    photoURL: true,
+  }),
+});
+export type RecipeWithAuthor = z.infer<typeof RecipeWithAuthorSchema>;
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T | null;
+  error?: {
+    message: string;
+    code?: number;
+  };
+}
+
+// =================================================================
+// FORM VALIDATION SCHEMAS (ZOD)
+// =================================================================
+
+export const CreateRecipeFormSchema = RecipeSchema.omit({
+  id: true,
+  authorId: true,
+  createdAt: true,
+  updatedAt: true,
+  rating: true,
+  imageUrl: true,
+}).extend({
+   // Make nutrition optional in form, as it will be calculated
+   nutrition: NutritionInfoSchema.optional(),
+});
+
+export type CreateRecipeFormData = z.infer<typeof CreateRecipeFormSchema>;
+
+// =================================================================
+// AI & SERVICE-SPECIFIC TYPES
+// =================================================================
+
+// Placeholder for future AI service types
+export interface AiRecipeRequest {
+  ingredients: string[];
+  dietaryRestrictions?: string[];
+  cuisinePreference?: string;
+}
+
+export interface AiRecipeResponse {
+  generatedRecipe: Omit<Recipe, 'id' | 'authorId' | 'createdAt' | 'updatedAt' | 'rating'>;
+}
+
+// ... other types from previous context ...
+
 export const AnalyzeRecipeInputSchema = z.object({
   title: z.string().describe("The title of the recipe."),
   ingredients: z.array(z.string()).describe("A list of ingredients with quantities."),
@@ -53,7 +152,6 @@ export interface AnalyticsEvent {
     createdAt: Timestamp;
 }
 
-// Define the schema for the recommendation output
 export const RecommendedRecipesSchema = z.object({
   recommendations: z.array(z.object({
     recipeId: z.string().describe("The ID of the recommended recipe."),
@@ -62,7 +160,6 @@ export const RecommendedRecipesSchema = z.object({
 });
 export type RecommendedRecipes = z.infer<typeof RecommendedRecipesSchema>;
 
-// Define the input schema for the recommendation flow
 export const RecommendRecipesInputSchema = z.object({
   userId: z.string().describe("The ID of the user to generate recommendations for."),
   count: z.number().int().positive().optional().default(5).describe("The number of recommendations to generate."),
@@ -75,8 +172,6 @@ export const RecommendRecipesInputSchema = z.object({
 });
 export type RecommendRecipesInput = z.infer<typeof RecommendRecipesInputSchema>;
 
-
-// Define a schema for the generated recipe, which will be our output format.
 export const GeneratedRecipeSchema = z.object({
     title: z.string().describe("A creative and appealing title for the recipe."),
     description: z.string().describe("A short, enticing description of the dish."),
@@ -87,7 +182,12 @@ export const GeneratedRecipeSchema = z.object({
         quantity: z.string().describe("The quantity of the ingredient (e.g., '1 cup', '2 tbsp')."),
     })).describe("A list of ingredients required for the recipe."),
     instructions: z.array(z.string()).describe("Step-by-step instructions for preparing the dish."),
-    nutrition: NutritionInfoSchema.describe("Estimated nutritional information per serving."),
+    nutrition: NutritionInfoSchema.pick({calories:true, protein:true, carbs:true, fat:true}).extend({
+        calories: z.string(),
+        protein: z.string(),
+        carbs: z.string(),
+        fat: z.string()
+    }).describe("Estimated nutritional information per serving."),
 });
 export type GeneratedRecipe = z.infer<typeof GeneratedRecipeSchema>;
 
@@ -97,20 +197,16 @@ export const GenerateRecipeInputSchema = z.object({
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
-
-// Define the structure for a single day's meal plan
 const DayPlanSchema = z.object({
   Breakfast: z.string().optional().describe("The name of the recipe for breakfast."),
   Lunch: z.string().optional().describe("The name of the recipe for lunch."),
   Dinner: z.string().optional().describe("The name of the recipe for dinner."),
 });
 
-// Define the overall meal plan structure using a record for flexible day names
 export const MealPlanSchema = z.object({
   plan: z.record(z.string(), DayPlanSchema).describe("The generated meal plan, with days of the week as keys containing recipe names."),
 });
 export type MealPlan = z.infer<typeof MealPlanSchema>;
-
 
 export const GenerateMealPlanInputSchema = z.object({
   prompt: z.string().describe("The user's request for the meal plan (e.g., dietary needs, number of days)."),
@@ -118,8 +214,6 @@ export const GenerateMealPlanInputSchema = z.object({
 });
 export type GenerateMealPlanInput = z.infer<typeof GenerateMealPlanInputSchema>;
 
-
-// Schemas for Shopping List flow
 export const ShoppingListCategorySchema = z.object({
     category: z.string().describe("The category of the shopping list items (e.g., Produce, Dairy, Meat, Pantry)."),
     items: z.array(z.string()).describe("A list of food items in this category, without quantities."),
@@ -137,8 +231,6 @@ export const GenerateShoppingListInputSchema = z.object({
 });
 export type GenerateShoppingListInput = z.infer<typeof GenerateShoppingListInputSchema>;
 
-
-// Schemas for Get Ingredients flow
 export const GetIngredientsInputSchema = z.object({
   recipes: z.array(z.custom<Recipe>()).describe("A list of full recipe objects."),
 });
@@ -149,7 +241,6 @@ export const GetIngredientsOutputSchema = z.object({
 });
 export type GetIngredientsOutput = z.infer<typeof GetIngredientsOutputSchema>;
 
-// Schemas for Smart Recipe Tool
 export const SmartRecipeToolInputSchema = z.object({
   recipe: z.string().optional().describe('The recipe to be modified, as text.'),
   fileDataUri: z.string().optional().describe("An image or document of a recipe, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),

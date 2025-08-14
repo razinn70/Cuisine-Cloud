@@ -1,9 +1,9 @@
+// src/app/create-recipe/page.tsx
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -17,24 +17,20 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { createRecipe } from "@/services/recipe";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { logEvent } from "@/services/analytics";
-import { analyzeRecipe } from "@/ai/flows/analyze-recipe-flow";
-import { Recipe } from "@/types";
+import { CreateRecipeFormSchema, CreateRecipeFormData, RecipeDifficulty, CuisineType } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { v4 as uuidv4 } from 'uuid';
 
-const recipeFormSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters."),
-  description: z.string().min(10, "Description is too short."),
-  ingredients: z.string().min(1, "Please add at least one ingredient."),
-  instructions: z.string().min(1, "Please add instructions."),
-  cookTime: z.string().min(1, "Cook time is required."),
-  servings: z.string().min(1, "Number of servings is required."),
-});
+// Mock dependency, will be replaced by actual service
+const analyzeRecipeNutrition = async (data: any) => {
+    return { calories: 350, protein: 30, carbs: 25, fat: 15 };
+}
 
 export default function CreateRecipePage() {
   const { user } = useAuth();
@@ -42,224 +38,188 @@ export default function CreateRecipePage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<z.infer<typeof recipeFormSchema>>({
-    resolver: zodResolver(recipeFormSchema),
+  const form = useForm<CreateRecipeFormData>({
+    resolver: zodResolver(CreateRecipeFormSchema),
     defaultValues: {
       title: "",
       description: "",
-      ingredients: "",
-      instructions: "",
-      cookTime: "",
-      servings: "",
+      difficulty: RecipeDifficulty.Intermediate,
+      cuisine: CuisineType.American,
+      prepTimeMinutes: 15,
+      cookTimeMinutes: 30,
+      servings: 4,
+      tags: [],
+      ingredients: [{ id: uuidv4(), name: "", quantity: 1, unit: "cup" }],
+      instructions: ["First step..."],
     },
   });
 
-  async function onSubmit(values: z.infer<typeof recipeFormSchema>) {
+  const { fields: ingredientFields, append: appendIngredient, remove: removeIngredient } = useFieldArray({
+    control: form.control,
+    name: "ingredients",
+  });
+
+  const { fields: instructionFields, append: appendInstruction, remove: removeInstruction } = useFieldArray({
+    control: form.control,
+    name: "instructions",
+  });
+
+  async function onSubmit(values: CreateRecipeFormData) {
     if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: "You must be logged in to create a recipe.",
-      });
+      toast({ variant: "destructive", title: "Authentication Error" });
       return;
     }
     setIsLoading(true);
 
     try {
-      const ingredientsList = values.ingredients.split('\n').filter(line => line.trim() !== '');
-      const instructionsList = values.instructions.split('\n').filter(line => line.trim() !== '');
-
-      // Step 1: Analyze the recipe to get nutritional information.
-      const nutrition = await analyzeRecipe({
-        title: values.title,
-        ingredients: ingredientsList,
-        instructions: instructionsList,
-      });
-
-      // Step 2: Create the recipe object with the analyzed data.
-      const newRecipe: Omit<Recipe, "id" | "createdAt" | "rating"> = {
-        title: values.title,
-        description: values.description,
-        cookTime: values.cookTime,
-        servings: values.servings,
-        ingredients: ingredientsList.map(line => {
-            const parts = line.match(/^([0-9/.\s]+)?\s*(.*)/) || [];
-            const quantity = parts[1]?.trim() || '';
-            const name = parts[2]?.trim() || line;
-            return { name, quantity };
-        }),
-        instructions: instructionsList,
-        imageUrl: 'https://placehold.co/600x400.png',
-        nutrition: nutrition, 
-        author: user.displayName || "Anonymous",
+      // In a real app, this would call a nutrition service
+      const calculatedNutrition = await analyzeRecipeNutrition(values);
+      
+      const newRecipeData = {
+        ...values,
         authorId: user.uid,
-        difficulty: 'Intermediate', // Placeholder
-        tags: ['User Created'], // Placeholder
+        nutrition: calculatedNutrition,
+        // In a real app, image would be uploaded and URL would be set here
+        imageUrl: "https://placehold.co/600x400.png",
       };
       
-      const recipeId = await createRecipe(newRecipe);
+      const recipeId = await createRecipe(newRecipeData);
       
-      await logEvent('recipe_created', { recipeId: recipeId, userId: user.uid, recipeTitle: newRecipe.title });
-
-      toast({
-        title: "Recipe Created!",
-        description: "Your delicious recipe has been saved.",
-      });
-      
+      toast({ title: "Recipe Created!", description: "Your recipe has been saved." });
       router.push(`/recipe/${recipeId}`);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create the recipe. Please try again.",
-      });
+      toast({ variant: "destructive", title: "Error", description: error.message });
     } finally {
       setIsLoading(false);
     }
   }
-  
+
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-headline mb-4">Please Log In</h1>
-        <p className="text-muted-foreground mb-6">You need to be logged in to create a recipe.</p>
-        <Button asChild>
-          <Link href="/login">Log In</Link>
-        </Button>
+        <Button asChild><Link href="/login">Log In</Link></Button>
       </div>
     );
   }
-
 
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle className="font-headline text-3xl text-accent">
-            Share Your Culinary Creation
-          </CardTitle>
+          <CardTitle className="font-headline text-3xl text-accent">Create a New Recipe</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Recipe Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., My Grandma's Famous Lasagna" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="A short and enticing description of your dish."
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="title" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl><Input {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl><Textarea {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
               
-              <div className="flex items-center justify-center w-full">
-                <label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-secondary hover:bg-muted">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                        <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                        <p className="text-xs text-muted-foreground">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
-                    </div>
-                    <input id="dropzone-file" type="file" className="hidden" />
-                </label>
-              </div> 
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <FormField
-                  control={form.control}
-                  name="cookTime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cook Time</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 45 minutes" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="servings"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Servings</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 4 people" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <FormField control={form.control} name="difficulty" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Difficulty</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {Object.values(RecipeDifficulty).map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                 <FormField control={form.control} name="cuisine" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cuisine</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {Object.values(CuisineType).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <FormField control={form.control} name="prepTimeMinutes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prep Time (min)</FormLabel>
+                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="cookTimeMinutes" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cook Time (min)</FormLabel>
+                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl>
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="servings" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Servings</FormLabel>
+                    <FormControl><Input type="number" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl>
+                  </FormItem>
+                )} />
               </div>
 
-              <FormField
-                control={form.control}
-                name="ingredients"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ingredients</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder={"List each ingredient on a new line. e.g., '1 cup Flour'"}
-                        rows={8}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      One ingredient per line, with quantity first (e.g., "1 cup Flour").
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="instructions"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Instructions</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Provide step-by-step instructions."
-                        rows={10}
-                        {...field}
-                      />
-                    </FormControl>
-                     <FormDescription>
-                      One step per line.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div>
+                <FormLabel>Ingredients</FormLabel>
+                <div className="space-y-4 mt-2">
+                  {ingredientFields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2 items-start">
+                      <FormField control={form.control} name={`ingredients.${index}.name`} render={({ field }) => (
+                        <FormItem className="flex-1"><FormControl><Input placeholder="Ingredient Name" {...field} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name={`ingredients.${index}.quantity`} render={({ field }) => (
+                        <FormItem className="w-24"><FormControl><Input type="number" placeholder="Qty" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl></FormItem>
+                      )} />
+                      <FormField control={form.control} name={`ingredients.${index}.unit`} render={({ field }) => (
+                        <FormItem className="w-32"><FormControl><Input placeholder="Unit" {...field} /></FormControl></FormItem>
+                      )} />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => removeIngredient(index)}><Trash2 /></Button>
+                    </div>
+                  ))}
+                  <Button type="button" variant="outline" size="sm" onClick={() => appendIngredient({ id: uuidv4(), name: "", quantity: 1, unit: "" })}>
+                    <PlusCircle className="mr-2" /> Add Ingredient
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <FormLabel>Instructions</FormLabel>
+                <div className="space-y-4 mt-2">
+                  {instructionFields.map((field, index) => (
+                    <div key={field.id} className="flex gap-2 items-start">
+                      <FormField control={form.control} name={`instructions.${index}`} render={({ field }) => (
+                        <FormItem className="flex-1">
+                            <FormControl><Textarea placeholder={`Step ${index + 1}`} {...field} /></FormControl>
+                        </FormItem>
+                      )} />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => removeInstruction(index)}><Trash2 /></Button>
+                    </div>
+                  ))}
+                   <Button type="button" variant="outline" size="sm" onClick={() => appendInstruction("")}>
+                    <PlusCircle className="mr-2" /> Add Step
+                  </Button>
+                </div>
+              </div>
 
               <Button type="submit" size="lg" disabled={isLoading}>
-                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isLoading ? 'Analyzing & Saving...' : 'Create Recipe'}
+                {isLoading && <Loader2 className="mr-2 animate-spin" />}
+                {isLoading ? 'Creating...' : 'Create Recipe'}
               </Button>
             </form>
           </Form>

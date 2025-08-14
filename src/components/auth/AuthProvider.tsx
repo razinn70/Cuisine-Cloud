@@ -7,50 +7,46 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-  User,
+  User as FirebaseUser,
   UserCredential,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/firebase/client';
 import { Loader2 } from 'lucide-react';
+import { UserProfile } from '@/types';
 
+// Extend the context to include our custom UserProfile
 interface AuthContextType {
-  user: User | null;
+  user: UserProfile | null;
+  firebaseUser: FirebaseUser | null;
   loading: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<UserCredential>;
-  logIn: (email: string, password: string) => Promise<User>;
+  logIn: (email: string, password: string) => Promise<FirebaseUser>;
   logOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper function to set a cookie
-function setCookie(name: string, value: string, days: number) {
-    let expires = "";
-    if (days) {
-        const date = new Date();
-        date.setTime(date.getTime() + (days*24*60*60*1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
-}
-
-function eraseCookie(name: string) {   
-    document.cookie = name+'=; Max-Age=-99999999;';  
-}
-
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (user) {
-        // For server-side rendering, we need to set a cookie to let the server know
-        // that the user is authenticated. We'll use the UID as a simple session identifier.
-        setCookie('session', user.uid, 7);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        setFirebaseUser(fbUser);
+        // Here you would typically fetch your custom user profile from your database
+        // For now, we'll create a UserProfile object from the Firebase user
+        const userProfile: UserProfile = {
+          uid: fbUser.uid,
+          email: fbUser.email || '',
+          displayName: fbUser.displayName || 'New User',
+          photoURL: fbUser.photoURL || undefined,
+        };
+        setUser(userProfile);
       } else {
-        eraseCookie('session');
+        setFirebaseUser(null);
+        setUser(null);
       }
       setLoading(false);
     });
@@ -61,30 +57,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, displayName: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, { displayName });
-    // Manually set user after profile update to reflect changes immediately
-    const updatedUser = { ...userCredential.user, displayName };
-    setUser(updatedUser);
-    if (updatedUser) {
-       setCookie('session', updatedUser.uid, 7);
-    }
+    // This is where you would create the user profile document in Firestore
+    // e.g., await createUserProfile(userCredential.user.uid, { ... });
     return userCredential;
   };
   
   const logIn = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    if(userCredential.user){
-      setCookie('session', userCredential.user.uid, 7);
-    }
     return userCredential.user;
   };
 
   const logOut = async () => {
     await signOut(auth);
-    eraseCookie('session');
   };
 
   const value = {
     user,
+    firebaseUser,
     loading,
     signUp,
     logIn,

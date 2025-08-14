@@ -1,4 +1,4 @@
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/firebase/client";
 import { collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { AnalyticsEvent } from "@/types";
 

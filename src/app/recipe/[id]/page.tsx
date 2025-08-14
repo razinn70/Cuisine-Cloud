@@ -1,3 +1,4 @@
+// src/app/recipe/[id]/page.tsx
 "use client";
 
 import type { Recipe } from "@/types";
@@ -7,10 +8,11 @@ import {
   Clock,
   Users,
   Star,
-  Heart,
-  Share2,
   Bookmark,
   Zap,
+  Flame,
+  User,
+  Tag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,12 +23,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import SmartRecipeTool from "@/components/ai/SmartRecipeTool";
 import { useEffect, useState } from "react";
 import { getRecipe } from "@/services/recipe";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { logEvent } from "@/services/analytics";
 
 export default function RecipePage() {
   const params = useParams();
@@ -39,13 +39,11 @@ export default function RecipePage() {
     if (!id) return;
     
     const fetchRecipe = async () => {
+      setLoading(true);
       try {
         const fetchedRecipe = await getRecipe(id);
         if (fetchedRecipe) {
           setRecipe(fetchedRecipe);
-          if (user?.uid) {
-            await logEvent('recipe_viewed', { recipeId: id, userId: user.uid, recipeTitle: fetchedRecipe.title });
-          }
         } else {
           notFound();
         }
@@ -57,121 +55,81 @@ export default function RecipePage() {
       }
     };
     fetchRecipe();
-  }, [id, user?.uid]);
+  }, [id]);
 
   if (loading) {
-    return (
-       <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-12">
-          <div className="lg:col-span-2 space-y-6">
-            <Skeleton className="h-12 w-3/4" />
-            <Skeleton className="h-8 w-1/2" />
-            <Skeleton className="relative aspect-video w-full rounded-lg" />
-            <div className="flex items-center justify-between">
-                <Skeleton className="h-8 w-1/3" />
-                <Skeleton className="h-10 w-1/4" />
-            </div>
-            <Separator />
-             <div className="grid md:grid-cols-5 gap-8">
-                <div className="md:col-span-2 space-y-4">
-                    <Skeleton className="h-8 w-1/2" />
-                    <Skeleton className="h-24 w-full" />
-                </div>
-                <div className="md:col-span-3 space-y-4">
-                    <Skeleton className="h-8 w-1/2" />
-                    <Skeleton className="h-32 w-full" />
-                </div>
-             </div>
-          </div>
-          <aside className="lg:col-span-1 space-y-8">
-            <Skeleton className="w-full h-48 rounded-lg" />
-            <Skeleton className="w-full h-64 rounded-lg" />
-          </aside>
-        </div>
-      </div>
-    )
+    return <RecipePageSkeleton />;
   }
 
   if (!recipe) {
     return notFound();
   }
 
+  const totalTime = recipe.prepTimeMinutes + recipe.cookTimeMinutes;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid lg:grid-cols-3 gap-x-12">
         <div className="lg:col-span-2">
-          {/* Header */}
           <header className="mb-6">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-                <Badge variant="secondary">
-                By {recipe.author}
-                </Badge>
-                {recipe.tags?.map(tag => (
-                    <Badge key={tag} variant="outline">{tag}</Badge>
-                ))}
-            </div>
-            <h1 className="text-4xl lg:text-5xl font-headline font-bold text-accent-foreground mb-4 tracking-tight">
+            <h1 className="text-4xl lg:text-5xl font-headline font-bold text-accent-foreground mb-2">
               {recipe.title}
             </h1>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-muted-foreground">
+                <span className="flex items-center gap-2"><User size={16} /> By {recipe.authorId}</span>
+                <span className="flex items-center gap-2"><Zap size={16} /> {recipe.difficulty}</span>
+                {recipe.cuisine && <span className="flex items-center gap-2"><Flame size={16}/> {recipe.cuisine}</span>}
+            </div>
             <p className="text-lg text-muted-foreground">{recipe.description}</p>
           </header>
 
-          {/* Image and Meta */}
           <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-6 shadow-lg">
             <Image
-              src={recipe.imageUrl}
+              src={recipe.imageUrl || "https://placehold.co/600x400.png"}
               alt={recipe.title}
               fill
               className="object-cover"
-              data-ai-hint="recipe food"
+              data-ai-hint="recipe food photo"
             />
           </div>
-          <div className="flex items-center justify-between mb-6 p-4 bg-secondary rounded-xl border">
-            <div className="flex items-center flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
-              <div className="flex items-center gap-2" title="Cook time">
-                <Clock className="w-5 h-5" />
-                <span>{recipe.cookTime}</span>
-              </div>
-              <div className="flex items-center gap-2" title="Servings">
-                <Users className="w-5 h-5" />
-                <span>{recipe.servings} Servings</span>
-              </div>
-               <div className="flex items-center gap-2" title="Difficulty">
-                <Zap className="w-5 h-5" />
-                <span>{recipe.difficulty}</span>
-              </div>
-              <div className="flex items-center gap-2" title="Rating">
-                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                <span>{recipe.rating}/5.0</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon">
-                <Heart className="w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Share2 className="w-5 h-5" />
-              </Button>
-              <Button>
-                <Bookmark className="w-5 h-5 mr-2" />
-                Save Recipe
-              </Button>
-            </div>
-          </div>
 
-          <Separator className="my-8" />
+          <Card className="mb-6">
+             <CardContent className="p-4 flex items-center justify-around flex-wrap">
+                 <div className="text-center p-2">
+                    <p className="font-bold text-lg">{recipe.prepTimeMinutes} min</p>
+                    <p className="text-sm text-muted-foreground">Prep Time</p>
+                 </div>
+                 <div className="text-center p-2">
+                    <p className="font-bold text-lg">{recipe.cookTimeMinutes} min</p>
+                    <p className="text-sm text-muted-foreground">Cook Time</p>
+                 </div>
+                 <div className="text-center p-2">
+                    <p className="font-bold text-lg">{totalTime} min</p>
+                    <p className="text-sm text-muted-foreground">Total Time</p>
+                 </div>
+                 <div className="text-center p-2">
+                    <p className="font-bold text-lg">{recipe.servings}</p>
+                    <p className="text-sm text-muted-foreground">Servings</p>
+                 </div>
+                 <div className="text-center p-2">
+                    <p className="font-bold text-lg flex items-center gap-1 justify-center">
+                        <Star className="text-yellow-500 fill-yellow-500" size={20}/>
+                        {recipe.rating.toFixed(1)}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Rating</p>
+                 </div>
+             </CardContent>
+          </Card>
 
-          {/* Main Content */}
           <div className="grid md:grid-cols-5 gap-8">
             <div className="md:col-span-2">
               <h2 className="text-2xl font-headline mb-4">Ingredients</h2>
               <ul className="space-y-3">
-                {recipe.ingredients.map((ing, index) => (
-                  <li key={index} className="flex items-start bg-secondary/50 p-3 rounded-lg border">
-                    <span className="text-primary mr-3 mt-1">&#10003;</span>
-                    <div>
+                {recipe.ingredients.map((ing) => (
+                  <li key={ing.id} className="flex items-start bg-secondary/50 p-3 rounded-lg border">
+                    <div className="ml-3">
                       <span className="font-semibold text-accent-foreground">{ing.name}</span>
-                       {ing.quantity && <span className="text-muted-foreground text-sm"> - {ing.quantity}</span>}
+                      <div className="text-muted-foreground text-sm">{ing.quantity} {ing.unit}</div>
                     </div>
                   </li>
                 ))}
@@ -193,45 +151,54 @@ export default function RecipePage() {
           </div>
         </div>
 
-        {/* Sidebar */}
         <aside className="lg:col-span-1 space-y-8 sticky top-24 h-fit">
           <Card className="shadow-md">
-            <CardHeader>
-              <CardTitle className="font-headline text-xl">
-                Nutritional Information
-              </CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle className="font-headline text-xl">Nutritional Information</CardTitle></CardHeader>
             <CardContent>
               <ul className="space-y-2 text-muted-foreground">
-                <li className="flex justify-between items-baseline">
-                  <span>Calories:</span>{" "}
-                  <span className="font-semibold text-foreground text-lg">
-                    {recipe.nutrition.calories}
-                  </span>
-                </li>
-                <li className="flex justify-between items-baseline">
-                  <span>Protein:</span>{" "}
-                  <span className="font-semibold text-foreground text-lg">
-                    {recipe.nutrition.protein}
-                  </span>
-                </li>
-                <li className="flex justify-between items-baseline">
-                  <span>Carbs:</span>{" "}
-                  <span className="font-semibold text-foreground text-lg">
-                    {recipe.nutrition.carbs}
-                  </span>
-                </li>
-                <li className="flex justify-between items-baseline">
-                  <span>Fat:</span>{" "}
-                  <span className="font-semibold text-foreground text-lg">
-                    {recipe.nutrition.fat}
-                  </span>
-                </li>
+                <li className="flex justify-between items-baseline"><span>Calories:</span><span className="font-semibold text-foreground">{recipe.nutrition.calories}</span></li>
+                <li className="flex justify-between items-baseline"><span>Protein:</span><span className="font-semibold text-foreground">{recipe.nutrition.protein}g</span></li>
+                <li className="flex justify-between items-baseline"><span>Carbs:</span><span className="font-semibold text-foreground">{recipe.nutrition.carbs}g</span></li>
+                <li className="flex justify-between items-baseline"><span>Fat:</span><span className="font-semibold text-foreground">{recipe.nutrition.fat}g</span></li>
               </ul>
             </CardContent>
           </Card>
+          {recipe.tags && recipe.tags.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="font-headline text-xl">Tags</CardTitle></CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                {recipe.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+              </CardContent>
+            </Card>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
 
-          <SmartRecipeTool recipe={recipe} />
+function RecipePageSkeleton() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2 space-y-6">
+          <Skeleton className="h-12 w-3/4" />
+          <Skeleton className="h-8 w-1/2" />
+          <Skeleton className="relative aspect-video w-full rounded-lg" />
+          <div className="grid md:grid-cols-5 gap-8">
+              <div className="md:col-span-2 space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-24 w-full" />
+              </div>
+              <div className="md:col-span-3 space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-32 w-full" />
+              </div>
+          </div>
+        </div>
+        <aside className="lg:col-span-1 space-y-8">
+          <Skeleton className="w-full h-48 rounded-lg" />
+          <Skeleton className="w-full h-64 rounded-lg" />
         </aside>
       </div>
     </div>
