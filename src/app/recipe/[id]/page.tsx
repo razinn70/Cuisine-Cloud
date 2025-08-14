@@ -1,7 +1,8 @@
-import { recipes } from "@/lib/placeholder-data";
+"use client";
+
 import type { Recipe } from "@/types";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import {
   Clock,
   Users,
@@ -10,6 +11,7 @@ import {
   Share2,
   Bookmark,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,18 +23,72 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import SmartRecipeTool from "@/components/ai/SmartRecipeTool";
+import { useEffect, useState } from "react";
+import { getRecipe } from "@/services/recipe";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function generateStaticParams() {
-  return recipes.map((recipe) => ({
-    id: recipe.id,
-  }));
-}
+export default function RecipePage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [loading, setLoading] = useState(true);
 
-export default function RecipePage({ params }: { params: { id: string } }) {
-  const recipe = recipes.find((r) => r.id === params.id);
+  useEffect(() => {
+    if (!id) return;
+    
+    const fetchRecipe = async () => {
+      try {
+        const fetchedRecipe = await getRecipe(id);
+        if (fetchedRecipe) {
+          setRecipe(fetchedRecipe);
+        } else {
+          notFound();
+        }
+      } catch (error) {
+        console.error("Failed to fetch recipe:", error);
+        notFound();
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRecipe();
+  }, [id]);
+
+  if (loading) {
+    return (
+       <div className="container mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-8 w-1/2" />
+            <Skeleton className="relative aspect-video w-full rounded-lg" />
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-10 w-1/4" />
+            </div>
+            <Separator />
+             <div className="grid md:grid-cols-5 gap-8">
+                <div className="md:col-span-2 space-y-4">
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+                <div className="md:col-span-3 space-y-4">
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-32 w-full" />
+                </div>
+             </div>
+          </div>
+          <aside className="lg:col-span-1 space-y-8">
+            <Skeleton className="w-full h-48 rounded-lg" />
+            <Skeleton className="w-full h-64 rounded-lg" />
+          </aside>
+        </div>
+      </div>
+    )
+  }
 
   if (!recipe) {
-    notFound();
+    return notFound();
   }
 
   return (
@@ -100,8 +156,8 @@ export default function RecipePage({ params }: { params: { id: string } }) {
                   <li key={index} className="flex items-start">
                     <span className="text-primary mr-2 mt-1">&#10003;</span>
                     <div>
-                      <span className="font-semibold">{ing.name}</span> -{" "}
-                      {ing.quantity}
+                      <span className="font-semibold">{ing.name}</span>
+                       {ing.quantity && ` - ${ing.quantity}`}
                     </div>
                   </li>
                 ))}
