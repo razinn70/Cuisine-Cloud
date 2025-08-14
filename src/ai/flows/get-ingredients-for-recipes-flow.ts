@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { Recipe } from '@/types';
 
 export const GetIngredientsInputSchema = z.object({
-  recipes: z.array(z.custom<Recipe>()).describe("A list of recipes to extract ingredients from."),
+  recipes: z.array(z.any()).describe("A list of recipe objects to extract ingredients from."),
 });
 export type GetIngredientsInput = z.infer<typeof GetIngredientsInputSchema>;
 
@@ -29,13 +29,12 @@ const getIngredientsForRecipesFlow = ai.defineFlow(
     outputSchema: GetIngredientsOutputSchema,
   },
   async (input) => {
-    const ingredients = input.recipes.flatMap(recipe => 
+    // This task is deterministic and doesn't require an AI call.
+    // Using code is more efficient and reliable.
+    const ingredients = (input.recipes as Recipe[]).flatMap(recipe => 
         recipe.ingredients.map(ing => `${ing.quantity} ${ing.name}`.trim())
     );
     
-    // In a more complex scenario, an AI prompt could be used here to consolidate
-    // or format the ingredients, but for simple aggregation, code is more efficient.
-    // For demonstration of a simple flow, we just return the aggregated data.
     return { ingredients };
   }
 );
