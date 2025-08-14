@@ -9,9 +9,11 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
-import { ChefHat, UtensilsCrossed, Plus, Calendar, BarChart3, Wand2 } from "lucide-react";
+import { ChefHat, UtensilsCrossed, Plus, Calendar, BarChart3, Wand2, LogOut } from "lucide-react";
 import { useAuth } from "../auth/AuthProvider";
+import { Button } from "../ui/button";
 
 const navLinks = [
   { href: "/", label: "Discover", icon: UtensilsCrossed },
@@ -23,7 +25,7 @@ const navLinks = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logOut } = useAuth();
 
   return (
     <>
@@ -55,6 +57,18 @@ export default function AppSidebar() {
           })}
         </SidebarMenu>
       </SidebarContent>
+      {user && (
+        <SidebarFooter>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton onClick={logOut} tooltip={{children: 'Log Out'}}>
+                        <LogOut />
+                        <span>Log Out</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
+      )}
     </>
   );
 }
