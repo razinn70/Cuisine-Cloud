@@ -15,10 +15,10 @@ import { useAuth } from "../auth/AuthProvider";
 
 const navLinks = [
   { href: "/", label: "Discover", icon: UtensilsCrossed },
-  { href: "/create-recipe", label: "Create Recipe", icon: Plus },
-  { href: "/meal-planner", label: "Meal Planner", icon: Calendar },
-  { href: "/generate-recipe", label: "Generate Recipe", icon: Wand2, pro: true },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/create-recipe", label: "Create Recipe", icon: Plus, auth: true },
+  { href: "/meal-planner", label: "Meal Planner", icon: Calendar, auth: false },
+  { href: "/generate-recipe", label: "Generate Recipe", icon: Wand2, auth: false },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, auth: true },
 ];
 
 export default function AppSidebar() {
@@ -31,7 +31,7 @@ export default function AppSidebar() {
         <SidebarMenu>
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
-            if (!user && (link.href === '/create-recipe' || link.href === '/meal-planner' || link.href === '/analytics' || link.href === '/generate-recipe')) {
+            if (link.auth && !user) {
               return null;
             }
             return (
