@@ -242,3 +242,5 @@ export const SmartRecipeToolOutputSchema = z.object({
   modifiedRecipe: z.string().describe('The modified recipe with suggestions for substitutions or modifications.'),
 });
 export type SmartRecipeToolOutput = z.infer<typeof SmartRecipeToolOutputSchema>;
+
+    
