@@ -30,13 +30,13 @@ export enum CuisineType {
 // =================================================================
 
 export const NutritionInfoSchema = z.object({
-  calories: z.number().positive().optional(),
-  protein: z.number().positive().optional(),
-  carbs: z.number().positive().optional(),
-  fat: z.number().positive().optional(),
-  fiber: z.number().positive().optional(),
-  sugar: z.number().positive().optional(),
-  sodium: z.number().positive().optional(),
+  calories: z.number().optional(),
+  protein: z.number().optional(),
+  carbs: z.number().optional(),
+  fat: z.number().optional(),
+  fiber: z.number().optional(),
+  sugar: z.number().optional(),
+  sodium: z.number().optional(),
 });
 export type NutritionInfo = z.infer<typeof NutritionInfoSchema>;
 
