@@ -62,6 +62,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     await createUserProfile(profileData);
     
+    // Explicitly fetch and set the user profile right after creation
+    const newUserProfile = await getUserProfile(userCredential.user.uid);
+    setUser(newUserProfile);
+    
     return userCredential;
   };
   

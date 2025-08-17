@@ -31,7 +31,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useEffect, useState } from "react";
 import { getRecipes } from "@/services/recipe";
-import { Recipe, MealPlan, ShoppingList, ShoppingListCategory } from "@/types";
+import { Recipe, MealPlan, ShoppingListCategory } from "@/types";
 import { generateMealPlan } from "@/ai/flows/meal-planner-flow";
 import { generateShoppingList } from "@/ai/flows/shopping-list-flow";
 import { getIngredientsForRecipes } from "@/ai/flows/get-ingredients-for-recipes-flow";
@@ -319,5 +319,3 @@ export default function MealPlannerPage() {
     </div>
   );
 }
-
-    
