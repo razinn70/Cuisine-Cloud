@@ -1,4 +1,4 @@
-// src/app/recipe/[id]/page.tsx
+
 "use client";
 
 import type { Recipe } from "@/types";
@@ -8,31 +8,36 @@ import {
   Clock,
   Users,
   Star,
-  Bookmark,
   Zap,
   Flame,
   User,
-  Tag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { getRecipe } from "@/services/recipe";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/components/auth/AuthProvider";
+import SmartRecipeTool from "@/components/ai/SmartRecipeTool";
+import { getAuthenticatedUser } from "@/lib/auth";
+
+// Helper function to fetch author display name
+// In a real app, this might come from a user service
+async function getAuthorName(authorId: string) {
+    // This is a placeholder. In a real app you'd fetch this from a user service.
+    // For now we can't display a name, so we'll just show the ID for debugging.
+    return `User ${authorId.substring(0, 6)}...`;
+}
 
 export default function RecipePage() {
   const params = useParams();
   const id = params.id as string;
-  const { user } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [authorName, setAuthorName] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +49,8 @@ export default function RecipePage() {
         const fetchedRecipe = await getRecipe(id);
         if (fetchedRecipe) {
           setRecipe(fetchedRecipe);
+          const name = await getAuthorName(fetchedRecipe.authorId);
+          setAuthorName(name);
         } else {
           notFound();
         }
@@ -76,7 +83,7 @@ export default function RecipePage() {
               {recipe.title}
             </h1>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-4 text-muted-foreground">
-                <span className="flex items-center gap-2"><User size={16} /> By {recipe.authorId}</span>
+                <span className="flex items-center gap-2"><User size={16} /> By {authorName}</span>
                 <span className="flex items-center gap-2"><Zap size={16} /> {recipe.difficulty}</span>
                 {recipe.cuisine && <span className="flex items-center gap-2"><Flame size={16}/> {recipe.cuisine}</span>}
             </div>
@@ -152,9 +159,11 @@ export default function RecipePage() {
         </div>
 
         <aside className="lg:col-span-1 space-y-8 sticky top-24 h-fit">
+            <SmartRecipeTool recipe={recipe} />
           <Card className="shadow-md">
             <CardHeader><CardTitle className="font-headline text-xl">Nutritional Information</CardTitle></CardHeader>
             <CardContent>
+              <p className="text-xs text-muted-foreground mb-2">Estimated values per serving.</p>
               <ul className="space-y-2 text-muted-foreground">
                 <li className="flex justify-between items-baseline"><span>Calories:</span><span className="font-semibold text-foreground">{recipe.nutrition.calories}</span></li>
                 <li className="flex justify-between items-baseline"><span>Protein:</span><span className="font-semibold text-foreground">{recipe.nutrition.protein}g</span></li>
@@ -185,20 +194,21 @@ function RecipePageSkeleton() {
           <Skeleton className="h-12 w-3/4" />
           <Skeleton className="h-8 w-1/2" />
           <Skeleton className="relative aspect-video w-full rounded-lg" />
+           <Skeleton className="h-24 w-full" />
           <div className="grid md:grid-cols-5 gap-8">
               <div className="md:col-span-2 space-y-4">
                   <Skeleton className="h-8 w-1/2" />
-                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-36 w-full" />
               </div>
               <div className="md:col-span-3 space-y-4">
                   <Skeleton className="h-8 w-1/2" />
-                  <Skeleton className="h-32 w-full" />
+                  <Skeleton className="h-48 w-full" />
               </div>
           </div>
         </div>
         <aside className="lg:col-span-1 space-y-8">
-          <Skeleton className="w-full h-48 rounded-lg" />
           <Skeleton className="w-full h-64 rounded-lg" />
+          <Skeleton className="w-full h-32 rounded-lg" />
         </aside>
       </div>
     </div>

@@ -1,4 +1,4 @@
-// src/app/create-recipe/page.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -23,14 +23,11 @@ import { createRecipe } from "@/services/recipe";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CreateRecipeFormSchema, CreateRecipeFormData, RecipeDifficulty, CuisineType } from "@/types";
+import { CreateRecipeFormSchema, CreateRecipeFormData, RecipeDifficulty, CuisineType, CreateRecipeData } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { v4 as uuidv4 } from 'uuid';
+import { analyzeRecipe } from "@/ai/flows/analyze-recipe-flow";
 
-// Mock dependency, will be replaced by actual service
-const analyzeRecipeNutrition = async (data: any) => {
-    return { calories: 350, protein: 30, carbs: 25, fat: 15 };
-}
 
 export default function CreateRecipePage() {
   const { user } = useAuth();
@@ -66,16 +63,20 @@ export default function CreateRecipePage() {
 
   async function onSubmit(values: CreateRecipeFormData) {
     if (!user) {
-      toast({ variant: "destructive", title: "Authentication Error" });
+      toast({ variant: "destructive", title: "Authentication Error", description: "You must be logged in to create a recipe." });
       return;
     }
     setIsLoading(true);
 
     try {
-      // In a real app, this would call a nutrition service
-      const calculatedNutrition = await analyzeRecipeNutrition(values);
+      // Use the AI flow to calculate nutrition based on the form data.
+      const calculatedNutrition = await analyzeRecipe({
+          title: values.title,
+          ingredients: values.ingredients.map(i => `${i.quantity} ${i.unit} ${i.name}`),
+          instructions: values.instructions,
+      });
       
-      const newRecipeData = {
+      const newRecipeData: CreateRecipeData = {
         ...values,
         authorId: user.uid,
         nutrition: calculatedNutrition,
@@ -85,12 +86,12 @@ export default function CreateRecipePage() {
       
       const recipeId = await createRecipe(newRecipeData);
       
-      toast({ title: "Recipe Created!", description: "Your recipe has been saved." });
+      toast({ title: "Recipe Created!", description: "Your recipe has been successfully saved." });
       router.push(`/recipe/${recipeId}`);
 
     } catch (error: any) {
       console.error(error);
-      toast({ variant: "destructive", title: "Error", description: error.message });
+      toast({ variant: "destructive", title: "Failed to Create Recipe", description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -100,6 +101,7 @@ export default function CreateRecipePage() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <h1 className="text-2xl font-headline mb-4">Please Log In</h1>
+        <p className="text-muted-foreground mb-6">You need to be logged in to create a new recipe.</p>
         <Button asChild><Link href="/login">Log In</Link></Button>
       </div>
     );
@@ -116,15 +118,15 @@ export default function CreateRecipePage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <FormField control={form.control} name="title" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Title</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <FormLabel>Recipe Title</FormLabel>
+                  <FormControl><Input placeholder="e.g., Grandma's Famous Lasagna" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="description" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Description</FormLabel>
-                  <FormControl><Textarea {...field} /></FormControl>
+                  <FormControl><Textarea placeholder="A short, enticing description of your dish..." {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -157,39 +159,43 @@ export default function CreateRecipePage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <FormField control={form.control} name="prepTimeMinutes" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prep Time (min)</FormLabel>
+                    <FormLabel>Prep Time (minutes)</FormLabel>
                     <FormControl><Input type="number" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl>
+                    <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="cookTimeMinutes" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Cook Time (min)</FormLabel>
+                    <FormLabel>Cook Time (minutes)</FormLabel>
                     <FormControl><Input type="number" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl>
+                    <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="servings" render={({ field }) => (
                   <FormItem>
                     <FormLabel>Servings</FormLabel>
                     <FormControl><Input type="number" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl>
+                    <FormMessage />
                   </FormItem>
                 )} />
               </div>
 
               <div>
                 <FormLabel>Ingredients</FormLabel>
+                <FormDescription>List all ingredients needed for your recipe.</FormDescription>
                 <div className="space-y-4 mt-2">
                   {ingredientFields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-start">
                       <FormField control={form.control} name={`ingredients.${index}.name`} render={({ field }) => (
-                        <FormItem className="flex-1"><FormControl><Input placeholder="Ingredient Name" {...field} /></FormControl></FormItem>
+                        <FormItem className="flex-1"><FormControl><Input placeholder="Ingredient Name" {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name={`ingredients.${index}.quantity`} render={({ field }) => (
-                        <FormItem className="w-24"><FormControl><Input type="number" placeholder="Qty" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl></FormItem>
+                        <FormItem className="w-24"><FormControl><Input type="number" placeholder="Qty" {...field} onChange={e => field.onChange(+e.target.value)} /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name={`ingredients.${index}.unit`} render={({ field }) => (
-                        <FormItem className="w-32"><FormControl><Input placeholder="Unit" {...field} /></FormControl></FormItem>
+                        <FormItem className="w-32"><FormControl><Input placeholder="Unit (e.g., cup, tbsp)" {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
-                      <Button type="button" variant="destructive" size="icon" onClick={() => removeIngredient(index)}><Trash2 /></Button>
+                      <Button type="button" variant="destructive" size="icon" onClick={() => removeIngredient(index)} aria-label="Remove ingredient"><Trash2 /></Button>
                     </div>
                   ))}
                   <Button type="button" variant="outline" size="sm" onClick={() => appendIngredient({ id: uuidv4(), name: "", quantity: 1, unit: "" })}>
@@ -200,15 +206,17 @@ export default function CreateRecipePage() {
               
               <div>
                 <FormLabel>Instructions</FormLabel>
+                 <FormDescription>Provide step-by-step instructions.</FormDescription>
                 <div className="space-y-4 mt-2">
                   {instructionFields.map((field, index) => (
                     <div key={field.id} className="flex gap-2 items-start">
                       <FormField control={form.control} name={`instructions.${index}`} render={({ field }) => (
                         <FormItem className="flex-1">
                             <FormControl><Textarea placeholder={`Step ${index + 1}`} {...field} /></FormControl>
+                            <FormMessage />
                         </FormItem>
                       )} />
-                      <Button type="button" variant="destructive" size="icon" onClick={() => removeInstruction(index)}><Trash2 /></Button>
+                      <Button type="button" variant="destructive" size="icon" onClick={() => removeInstruction(index)} aria-label="Remove step"><Trash2 /></Button>
                     </div>
                   ))}
                    <Button type="button" variant="outline" size="sm" onClick={() => appendInstruction("")}>
@@ -219,7 +227,7 @@ export default function CreateRecipePage() {
 
               <Button type="submit" size="lg" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 animate-spin" />}
-                {isLoading ? 'Creating...' : 'Create Recipe'}
+                {isLoading ? 'Saving Recipe...' : 'Create Recipe'}
               </Button>
             </form>
           </Form>
