@@ -20,7 +20,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         {/* Top section with Hero Image */}
         <div className="relative aspect-video">
           <Image
-            src={recipe.imageUrl}
+            src={recipe.imageUrl || 'https://placehold.co/400x300.png'}
             alt={recipe.title}
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -51,7 +51,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
         <CardContent className="p-4 flex-wrap justify-between text-sm text-muted-foreground bg-card grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="flex items-center gap-2" title="Cook time">
             <Clock className="w-4 h-4 text-primary" />
-            <span>{recipe.cookTime}</span>
+            <span>{recipe.cookTimeMinutes} min</span>
           </div>
           <div className="flex items-center gap-2" title="Servings">
             <Users className="w-4 h-4 text-primary" />

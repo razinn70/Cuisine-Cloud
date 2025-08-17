@@ -23,7 +23,7 @@ import { createRecipe } from "@/services/recipe";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { CreateRecipeFormSchema, CreateRecipeFormData, RecipeDifficulty, CuisineType, CreateRecipeData } from "@/types";
+import { CreateRecipeFormSchema, CreateRecipeFormData, RecipeDifficulty, CuisineType, CreateRecipeData, NutritionInfo } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { v4 as uuidv4 } from 'uuid';
 import { analyzeRecipe } from "@/ai/flows/analyze-recipe-flow";
@@ -70,7 +70,7 @@ export default function CreateRecipePage() {
 
     try {
       // Use the AI flow to calculate nutrition based on the form data.
-      const calculatedNutrition = await analyzeRecipe({
+      const calculatedNutrition: NutritionInfo = await analyzeRecipe({
           title: values.title,
           ingredients: values.ingredients.map(i => `${i.quantity} ${i.unit} ${i.name}`),
           instructions: values.instructions,

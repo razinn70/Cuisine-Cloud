@@ -18,7 +18,7 @@ async function Recommendations({ allRecipes }: { allRecipes: Recipe[] }) {
   
   let recommendations: RecommendedRecipes['recommendations'] = [];
   try {
-    const candidateRecipes = allRecipes.map(({ id, title, description, author }) => ({ id, title, description, author }));
+    const candidateRecipes = allRecipes.map(({ id, title, description }) => ({ id, title, description }));
     const result = await recommendRecipes({ userId: user.uid, count: 3, candidateRecipes });
     recommendations = result.recommendations;
   } catch (error) {

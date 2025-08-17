@@ -23,7 +23,6 @@ import { useEffect, useState } from "react";
 import { getRecipe } from "@/services/recipe";
 import { Skeleton } from "@/components/ui/skeleton";
 import SmartRecipeTool from "@/components/ai/SmartRecipeTool";
-import { getAuthenticatedUser } from "@/lib/auth";
 
 // Helper function to fetch author display name
 // In a real app, this might come from a user service
@@ -160,6 +159,7 @@ export default function RecipePage() {
 
         <aside className="lg:col-span-1 space-y-8 sticky top-24 h-fit">
             <SmartRecipeTool recipe={recipe} />
+          {recipe.nutrition && (
           <Card className="shadow-md">
             <CardHeader><CardTitle className="font-headline text-xl">Nutritional Information</CardTitle></CardHeader>
             <CardContent>
@@ -172,6 +172,7 @@ export default function RecipePage() {
               </ul>
             </CardContent>
           </Card>
+          )}
           {recipe.tags && recipe.tags.length > 0 && (
             <Card>
               <CardHeader><CardTitle className="font-headline text-xl">Tags</CardTitle></CardHeader>

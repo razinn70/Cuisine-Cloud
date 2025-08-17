@@ -60,8 +60,9 @@ export const RecipeSchema = z.object({
   tags: z.array(z.string()).optional(),
   ingredients: z.array(IngredientSchema),
   instructions: z.array(z.string().min(1, "Instruction cannot be empty.")),
-  nutrition: NutritionInfoSchema,
+  nutrition: NutritionInfoSchema.optional(),
   imageUrl: z.string().url().optional(),
+  // Use z.custom to handle Firestore Timestamps, ensuring they are correctly typed.
   createdAt: z.custom<Timestamp>((val) => val instanceof Timestamp, "Invalid Timestamp for createdAt"),
   updatedAt: z.custom<Timestamp>((val) => val instanceof Timestamp, "Invalid Timestamp for updatedAt"),
   rating: z.number().min(0).max(5).default(0),
@@ -78,8 +79,8 @@ export const CreateRecipeFormSchema = RecipeSchema.omit({
   updatedAt: true,
   rating: true,
   imageUrl: true,
-  // Nutrition is calculated on the backend/server-side
-  nutrition: true, 
+  // Nutrition is now calculated on the backend/server-side
+  nutrition: true,
 });
 export type CreateRecipeFormData = z.infer<typeof CreateRecipeFormSchema>;
 
@@ -87,7 +88,7 @@ export type CreateRecipeFormData = z.infer<typeof CreateRecipeFormSchema>;
 export type CreateRecipeData = CreateRecipeFormData & {
   authorId: string;
   imageUrl: string;
-  nutrition: NutritionInfo;
+  nutrition?: NutritionInfo;
   rating?: number;
 };
 

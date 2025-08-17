@@ -34,7 +34,7 @@ const recommendRecipesFlow = ai.defineFlow(
     
     const recommendationPrompt = ai.definePrompt({
         name: "recommendationPrompt",
-        input: { schema: RecommendRecipesInputSchema },
+        input: { schema: RecommendRecipesInputSchema.extend({ userRatings: z.any() }) },
         output: { schema: RecommendedRecipesSchema },
         prompt: `You are a sophisticated AI recommendation engine for a recipe platform. Your goal is to provide personalized recipe suggestions.
 
