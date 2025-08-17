@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -12,9 +13,9 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
 import { Loader2 } from 'lucide-react';
-import { UserProfile } from '@/types';
+import { CreateUserProfileData, UserProfile } from '@/types';
+import { getUserProfile, createUserProfile } from '@/services/user';
 
-// Extend the context to include our custom UserProfile
 interface AuthContextType {
   user: UserProfile | null;
   firebaseUser: FirebaseUser | null;
@@ -35,14 +36,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         setFirebaseUser(fbUser);
-        // Here you would typically fetch your custom user profile from your database
-        // For now, we'll create a UserProfile object from the Firebase user
-        const userProfile: UserProfile = {
-          uid: fbUser.uid,
-          email: fbUser.email || '',
-          displayName: fbUser.displayName || 'New User',
-          photoURL: fbUser.photoURL || undefined,
-        };
+        // Fetch the extended user profile from our database
+        const userProfile = await getUserProfile(fbUser.uid);
         setUser(userProfile);
       } else {
         setFirebaseUser(null);
@@ -57,8 +52,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, displayName: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(userCredential.user, { displayName });
-    // This is where you would create the user profile document in Firestore
-    // e.g., await createUserProfile(userCredential.user.uid, { ... });
+    
+    // Create the user profile document in Firestore
+    const profileData: CreateUserProfileData = {
+      uid: userCredential.user.uid,
+      email: userCredential.user.email || '',
+      displayName: displayName,
+      photoURL: userCredential.user.photoURL || undefined,
+    };
+    await createUserProfile(profileData);
+    
     return userCredential;
   };
   

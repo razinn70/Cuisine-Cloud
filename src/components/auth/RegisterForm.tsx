@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -51,9 +52,9 @@ export function RegisterForm() {
 
       toast({
         title: "Registration Successful",
-        description: "Welcome! Please log in to continue.",
+        description: "Welcome! We're logging you in...",
       });
-      router.push('/login');
+      router.push('/');
     } catch (error: any) {
        toast({
           variant: "destructive",

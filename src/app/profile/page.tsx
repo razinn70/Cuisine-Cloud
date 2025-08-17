@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RecipeCard from "@/components/recipes/RecipeCard";
-import { User, Settings, Mail, LogIn, ChefHat } from "lucide-react";
+import { Settings, Mail, LogIn, ChefHat } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import Link from "next/link";
 import { Recipe } from "@/types";
@@ -98,7 +98,7 @@ export default function ProfilePage() {
                         <Mail className="w-4 h-4" />
                         {user.email}
                     </p>
-                    <p className="mt-2 max-w-xl text-sm">Passionate home cook exploring flavors from around the world. My kitchen is my happy place!</p>
+                    <p className="mt-2 max-w-xl text-sm">{user.bio || "Passionate home cook exploring flavors from around the world. My kitchen is my happy place!"}</p>
                     </div>
                     <div className="sm:ml-auto">
                     <Button variant="outline">
@@ -145,5 +145,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-    
