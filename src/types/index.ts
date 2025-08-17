@@ -1,3 +1,4 @@
+
 import { Timestamp } from 'firebase/firestore';
 import { z } from 'zod';
 
@@ -40,7 +41,6 @@ export const NutritionInfoSchema = z.object({
 export type NutritionInfo = z.infer<typeof NutritionInfoSchema>;
 
 export const IngredientSchema = z.object({
-  id: z.string().uuid(),
   name: z.string().min(1, "Ingredient name cannot be empty."),
   quantity: z.number().positive("Quantity must be positive."),
   unit: z.string(),
@@ -62,9 +62,8 @@ export const RecipeSchema = z.object({
   instructions: z.array(z.string().min(1, "Instruction cannot be empty.")),
   nutrition: NutritionInfoSchema.optional(),
   imageUrl: z.string().url().optional(),
-  // Use z.custom to handle Firestore Timestamps, ensuring they are correctly typed.
-  createdAt: z.custom<Timestamp>((val) => val instanceof Timestamp, "Invalid Timestamp for createdAt"),
-  updatedAt: z.custom<Timestamp>((val) => val instanceof Timestamp, "Invalid Timestamp for updatedAt"),
+  createdAt: z.date(),
+  updatedAt: z.date(),
   rating: z.number().min(0).max(5).default(0),
 });
 export type Recipe = z.infer<typeof RecipeSchema>;
@@ -243,3 +242,5 @@ export const SmartRecipeToolOutputSchema = z.object({
   modifiedRecipe: z.string().describe('The modified recipe with suggestions for substitutions or modifications.'),
 });
 export type SmartRecipeToolOutput = z.infer<typeof SmartRecipeToolOutputSchema>;
+
+    

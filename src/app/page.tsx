@@ -1,3 +1,4 @@
+
 import RecipeCard from "@/components/recipes/RecipeCard";
 import { Utensils, Wand2 } from "lucide-react";
 import { getRecipes } from "@/services/recipe";
@@ -113,3 +114,5 @@ export default async function Home() {
     </div>
   );
 }
+
+    

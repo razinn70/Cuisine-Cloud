@@ -131,8 +131,8 @@ export default function RecipePage() {
             <div className="md:col-span-2">
               <h2 className="text-2xl font-headline mb-4">Ingredients</h2>
               <ul className="space-y-3">
-                {recipe.ingredients.map((ing) => (
-                  <li key={ing.id} className="flex items-start bg-secondary/50 p-3 rounded-lg border">
+                {recipe.ingredients.map((ing, index) => (
+                  <li key={index} className="flex items-start bg-secondary/50 p-3 rounded-lg border">
                     <div className="ml-3">
                       <span className="font-semibold text-accent-foreground">{ing.name}</span>
                       <div className="text-muted-foreground text-sm">{ing.quantity} {ing.unit}</div>
@@ -215,3 +215,5 @@ function RecipePageSkeleton() {
     </div>
   );
 }
+
+    

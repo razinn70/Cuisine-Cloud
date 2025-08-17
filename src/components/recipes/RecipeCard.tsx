@@ -1,3 +1,4 @@
+
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -70,3 +71,5 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
     </Link>
   );
 }
+
+    

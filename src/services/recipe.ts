@@ -1,3 +1,4 @@
+
 import {
   collection,
   addDoc,
@@ -35,8 +36,9 @@ const recipeConverter: FirestoreDataConverter<Recipe> = {
     return RecipeSchema.parse({
       id: snapshot.id,
       ...data,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      // Convert Timestamps to Dates
+      createdAt: (data.createdAt as Timestamp).toDate(),
+      updatedAt: (data.updatedAt as Timestamp).toDate(),
     });
   },
 };
@@ -53,12 +55,16 @@ const repository = {
   /**
    * Creates a new recipe in Firestore.
    * @param recipeData - The recipe data, conforming to the CreateRecipeData type.
-   * @returns The ID of the newly created recipe.
+   * @returns The newly created Recipe object.
    */
-  create: async (recipeData: CreateRecipeData): Promise<string> => {
+  create: async (recipeData: CreateRecipeData): Promise<Recipe> => {
     try {
       const docRef = await addDoc(recipesCollection, recipeData);
-      return docRef.id;
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        throw new Error('Failed to create and retrieve recipe.');
+      }
+      return docSnap.data();
     } catch (error) {
       console.error('Error creating recipe in repository: ', error);
       throw new Error('Could not create recipe.');
@@ -131,9 +137,9 @@ const repository = {
  * In a real app, this is where you'd add more complex business logic,
  * validation, or calls to other services.
  * @param recipeData - The data for the new recipe.
- * @returns The ID of the created recipe.
+ * @returns The created Recipe object.
  */
-export const createRecipe = async (recipeData: CreateRecipeData): Promise<string> => {
+export const createRecipe = async (recipeData: CreateRecipeData): Promise<Recipe> => {
   // Business logic could go here. For example, checking for duplicate titles, etc.
   return repository.create(recipeData);
 };
@@ -165,3 +171,5 @@ export const getRecipes = async (): Promise<Recipe[]> => {
 export const getUserRecipes = async (userId: string): Promise<Recipe[]> => {
   return repository.findByAuthor(userId);
 };
+
+    

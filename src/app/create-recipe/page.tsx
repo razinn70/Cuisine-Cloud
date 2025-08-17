@@ -46,7 +46,7 @@ export default function CreateRecipePage() {
       cookTimeMinutes: 30,
       servings: 4,
       tags: [],
-      ingredients: [{ id: uuidv4(), name: "", quantity: 1, unit: "cup" }],
+      ingredients: [{ name: "", quantity: 1, unit: "cup" }],
       instructions: ["First step..."],
     },
   });
@@ -84,10 +84,10 @@ export default function CreateRecipePage() {
         imageUrl: "https://placehold.co/600x400.png",
       };
       
-      const recipeId = await createRecipe(newRecipeData);
+      const createdRecipe = await createRecipe(newRecipeData);
       
       toast({ title: "Recipe Created!", description: "Your recipe has been successfully saved." });
-      router.push(`/recipe/${recipeId}`);
+      router.push(`/recipe/${createdRecipe.id}`);
 
     } catch (error: any) {
       console.error(error);
@@ -198,7 +198,7 @@ export default function CreateRecipePage() {
                       <Button type="button" variant="destructive" size="icon" onClick={() => removeIngredient(index)} aria-label="Remove ingredient"><Trash2 /></Button>
                     </div>
                   ))}
-                  <Button type="button" variant="outline" size="sm" onClick={() => appendIngredient({ id: uuidv4(), name: "", quantity: 1, unit: "" })}>
+                  <Button type="button" variant="outline" size="sm" onClick={() => appendIngredient({ name: "", quantity: 1, unit: "" })}>
                     <PlusCircle className="mr-2" /> Add Ingredient
                   </Button>
                 </div>
@@ -236,3 +236,5 @@ export default function CreateRecipePage() {
     </div>
   );
 }
+
+    
