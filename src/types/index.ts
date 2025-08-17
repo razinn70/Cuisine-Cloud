@@ -177,12 +177,7 @@ export const GeneratedRecipeSchema = z.object({
         quantity: z.string().describe("The quantity of the ingredient (e.g., '1 cup', '2 tbsp')."),
     })).describe("A list of ingredients required for the recipe."),
     instructions: z.array(z.string()).describe("Step-by-step instructions for preparing the dish."),
-    nutrition: NutritionInfoSchema.pick({calories:true, protein:true, carbs:true, fat:true}).extend({
-        calories: z.string(),
-        protein: z.string(),
-        carbs: z.string(),
-        fat: z.string()
-    }).describe("Estimated nutritional information per serving."),
+    nutrition: NutritionInfoSchema.pick({calories:true, protein:true, carbs:true, fat:true}).describe("Estimated nutritional information per serving."),
 });
 export type GeneratedRecipe = z.infer<typeof GeneratedRecipeSchema>;
 

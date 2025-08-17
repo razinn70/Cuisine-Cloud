@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -190,19 +191,19 @@ export default function GenerateRecipePage() {
                     <h3 className="text-xl font-headline mb-4">Nutritional Information (Estimated)</h3>
                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                         <div className="bg-secondary p-3 rounded-lg">
-                            <p className="font-bold text-lg">{generatedRecipe.nutrition.calories}</p>
+                            <p className="font-bold text-lg">{generatedRecipe.nutrition?.calories}</p>
                             <p className="text-sm text-muted-foreground">Calories</p>
                         </div>
                          <div className="bg-secondary p-3 rounded-lg">
-                            <p className="font-bold text-lg">{generatedRecipe.nutrition.protein}</p>
+                            <p className="font-bold text-lg">{generatedRecipe.nutrition?.protein}g</p>
                             <p className="text-sm text-muted-foreground">Protein</p>
                         </div>
                          <div className="bg-secondary p-3 rounded-lg">
-                            <p className="font-bold text-lg">{generatedRecipe.nutrition.carbs}</p>
+                            <p className="font-bold text-lg">{generatedRecipe.nutrition?.carbs}g</p>
                             <p className="text-sm text-muted-foreground">Carbs</p>
                         </div>
                          <div className="bg-secondary p-3 rounded-lg">
-                            <p className="font-bold text-lg">{generatedRecipe.nutrition.fat}</p>
+                            <p className="font-bold text-lg">{generatedRecipe.nutrition?.fat}g</p>
                             <p className="text-sm text-muted-foreground">Fat</p>
                         </div>
                     </div>
